@@ -31,8 +31,9 @@ public:
 	struct Node
 	{
 		Node(T val) :m_val(val) {}
+		Node(size_t nValid) : m_fInvalid(nValid) { }
 		Node() { }
-
+		bool  m_fInvalid = false;
 		T	  m_val;            //数据
 		Node* m_prev = nullptr; //前驱结点的地址
 		Node* m_next = nullptr; //后继结点的地址
@@ -54,11 +55,11 @@ public:
 	// 重载[]运算符
 	int& operator[](size_t nIdx);
 	// 新结点插入头部
-	CList& InsertHead(int val);
+	CList& InsertHead(T val);
 	// 新结点插入尾部
-	CList& InsertTail(int val);
+	CList& InsertTail(T val);
 	// 在指定索引插入值
-	CList& Insert(int val, size_t nIdx); 
+	CList& Insert(T val, size_t nIdx); 
 	// 遍历打印双向链表
 	void TraverseList() const;
 	// 删除双向链表头部
@@ -70,7 +71,30 @@ public:
 	// 清空链表并释放空间
 	void   Clear();
 	// 通过值来寻找对应结点的索引
-	int    Find(int val) const; 
+	bool FindStuId(const char *pcszName, size_t &rnID)
+	{
+		Node *pCurNode = nullptr;
+		pstStudentNameAndID pstStuNameAndId = nullptr;
+
+		if (!m_pHeadGuard || !m_pTailGuard)
+		{
+			return(false);
+		}
+		pCurNode = m_pHeadGuard->m_next;
+		while (pCurNode != m_pTailGuard)
+		{
+			pstStuNameAndId = (pstStudentNameAndID)&pCurNode->m_val;
+			if (!strcmp(pcszName, pstStuNameAndId->strStudentName.GetString()))
+			{
+				rnID = pstStuNameAndId->uiStudentID;
+				return(true);
+			}
+			pCurNode = pCurNode->m_next;
+		}
+		cout << endl;
+
+		return(false);
+	}
 	// 获取链表元素数量
 	size_t Size() const;
 	// 判断链表是否为空
@@ -167,7 +191,7 @@ CList<T>::~CList()
 }
 
 template <typename T>
-CList<T>& CList<T>::InsertHead(int val)
+CList<T>& CList<T>::InsertHead(T val)
 {
 	Node *pNewNode = nullptr;
 	Node *pNodeAfterHeadNode = nullptr;
@@ -196,13 +220,13 @@ CList<T>& CList<T>::InsertHead(int val)
 }
 
 template <typename T>
-CList<T>& CList<T>::InsertTail(int val)
+CList<T>& CList<T>::InsertTail(T val)
 {
 	return(Insert(val, m_nSize));
 }
 
 template <typename T>
-CList<T>& CList<T>::Insert(int val, size_t nIdx)
+CList<T>& CList<T>::Insert(T val, size_t nIdx)
 {
 	Node *pCurNode = m_pHeadGuard->m_next;
 	Node *pEndNode = m_pTailGuard;
@@ -262,7 +286,7 @@ void CList<T>::TraverseList() const
 	pCurNode = m_pHeadGuard->m_next;
 	while (pCurNode != m_pTailGuard)
 	{
-		cout << pCurNode->m_val << " ";
+		cout << pCurNode->m_val << endl;
 		pCurNode = pCurNode->m_next;
 	}
 	cout << endl;

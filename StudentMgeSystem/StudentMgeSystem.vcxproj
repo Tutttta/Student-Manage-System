@@ -137,7 +137,9 @@
     <ClCompile Include="Global.cpp" />
     <ClCompile Include="IO.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MD5.cpp" />
     <ClCompile Include="MockingString.cpp" />
+    <ClCompile Include="Sort.cpp" />
     <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -150,7 +152,9 @@
     <ClInclude Include="Control.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="IO.h" />
+    <ClInclude Include="MD5.h" />
     <ClInclude Include="MockingString.h" />
+    <ClInclude Include="Sort.h" />
     <ClInclude Include="UI.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

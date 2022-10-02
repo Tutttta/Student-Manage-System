@@ -57,6 +57,12 @@
     <ClCompile Include="MockingString.cpp">
       <Filter>common\source</Filter>
     </ClCompile>
+    <ClCompile Include="MD5.cpp">
+      <Filter>common\source</Filter>
+    </ClCompile>
+    <ClCompile Include="Sort.cpp">
+      <Filter>common\source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\utils\CMyString.h">
@@ -90,6 +96,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="MockingString.h">
+      <Filter>common\header</Filter>
+    </ClInclude>
+    <ClInclude Include="MD5.h">
+      <Filter>common\header</Filter>
+    </ClInclude>
+    <ClInclude Include="Sort.h">
       <Filter>common\header</Filter>
     </ClInclude>
   </ItemGroup>

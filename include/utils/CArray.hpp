@@ -20,173 +20,146 @@ Abstract:
 template <typename T>
 class CArray
 {
+#define BASESIZE 1000
+#define INCREMENT 500
 public:
 	// 构造函数
 	CArray();
-	CArray(const T &a);
-	// 拷贝构造函数
-	CArray(const CArray &ary);
-	// 移动构造函数
-	CArray(CArray &&ary);
-	// 虚析构函数
-	virtual ~CArray();
-	// 等号运算符重载
-	CArray& operator=(const CArray& ary);
-	// 右值等号运算符重载删除
+	// 析构函数
+	~CArray();
+	// 不允许等号运算符重载
+	CArray& operator=(const CArray& ary) = delete;
+	// 不允许右值等号运算符重载
 	CArray& operator=(CArray&& ary) = delete;
+	// 不允许构造函数
+	CArray(const CArray &ary) = delete;
 
-	CArray& Insert(const T &val, size_t nIdx);		// 指定位置插入
-	CArray& InsertHead(const T &val);		// 头部位置插入
-	CArray& InsertTail(const T &val);		// 尾部位置插入
+	bool Insert(const T &val, size_t nIdx);	// 指定位置插入
+	bool InsertHead(const T &val);			// 头部位置插入
+	bool InsertTail(const T &val);			// 尾部位置插入
 
-	CArray& Delete(size_t nIdx);			// 指定位置删除
-	CArray& DeleteHead();					// 头部位置删除
-	CArray& DeleteTail();					// 尾部位置删除
+	bool Delete(size_t nIdx, T &val);		// 指定位置删除
+	bool DeleteHead(T &val);				// 头部位置删除
+	bool DeleteTail(T &val);				// 尾部位置删除
 
-	T operator[](size_t nIdx);				// 访问
-	void SetValue(size_t nIdx, const T &iVal);		// 修改
+	bool Delete(size_t nIdx);
+	bool DeleteHead();
+	bool DeleteTail();
 
-	int  Find(const T &val)const;					// 查找
+	bool DeleteByID(size_t nID);			// 通过ID删除信息
+
+	T &operator[](size_t nIdx);					// 访问
+	void SetValue(size_t nIdx, const T &iVal);	// 修改
+	T *GetBufPtr() const { return(m_pBuf); }
+	size_t GetSize() const { return(m_nSize); } // 返回现有大小容量
+
+	int  Find(const T &val)const;				// 查找
+	bool FindStuByID(size_t nID) const;			// 通过ID查找学生信息
+	bool FindStuID(size_t nHash, size_t &rnID); // 通过Hash值查找学生ID
 
 	bool IsEmpty()const;                    // 判空
 	void Clear();                           // 清空
 
 	void swap(CArray& x);					// 与目标数组内容交换
 	void reverse();							// 反转数组的内容
-
-	void Print();							// 打印
 private:
-	void CopyAry(const CArray& ary);
 	void ReleaseAll(CArray &ary);
 	void ReleaseAll();
 
-	void ChkRefCntAndDec();
-	void ChkRefCntAndDec(CArray &ary);
-
 	void GiveValue(const CArray &ary);
+
+	bool IncBufSize(size_t nIncSize = INCREMENT);
 private:
 	T*   m_pBuf = nullptr;					// 元素缓冲区
 	size_t m_nSize = 0;						// 元素个数    内容content
 	size_t m_nBufSize = 0;					// 缓冲区大小  容量capacity
-	size_t *m_pRefCnt = nullptr;			// 引用计数指针
 };
 
+template <typename T>
+bool CArray<T>::FindStuByID(size_t nID) const
+{
+
+	return(true);
+}
 
 template <typename T>
-CArray<T>::CArray(const T &a) : m_pBuf(new T[1]{ a }), m_pRefCnt(new size_t(1)), m_nSize(1), m_nBufSize(1)
+bool CArray<T>::FindStuID(size_t nHash, size_t &rnID)
 {
-	if (!m_pBuf || !m_pRefCnt)
+	pstSearchIDByStudentName pSrhStuInfo = nullptr;
+	pstSearchIDByStudentName pObjInfo = nullptr;
+	bool fOk = false;
+
+	if (!nHash)
 	{
-		m_nBufSize = m_nSize = 0;
-		if (m_pRefCnt)
-		{
-			delete m_pRefCnt;
-			m_pRefCnt = nullptr;
-		}
-		if (m_pBuf)
-		{
-			delete m_pBuf;
-			m_pBuf = nullptr;
-		}
+		return(false);
 	}
+	pSrhStuInfo = m_pBuf;
+	// 二分查找法
+	pObjInfo = BinSrhStuName(pSrhStuInfo, m_nSize, nHash);
+	if (pObjInfo)
+	{
+		rnID = pObjInfo->uiStudentID;
+		fOk = true;
+	}
+
+	return(fOk);
+}
+
+template <typename T>
+bool CArray<T>::DeleteTail()
+{
+	T data;
+	return(DeleteTail(data));
+}
+
+template <typename T>
+bool CArray<T>::DeleteHead()
+{
+	T data;
+	return(DeleteHead(data));
+}
+
+template <typename T>
+bool CArray<T>::IncBufSize(size_t nIncSize/* = INCREMENT*/)
+{
+	T *pTmpAry = nullptr;
+
+	// 容量够不需要增加内容
+	if (m_nBufSize > m_nSize)
+	{
+		return(true);
+	}
+	// 容量满了的情况, 进行扩容
+	pTmpAry = new T[m_nBufSize + nIncSize];
+	if (!pTmpAry)
+	{
+		// 扩容失败
+		return(false);
+	}
+	memset(pTmpAry, 0, sizeof(pTmpAry[0]) * (m_nBufSize + nIncSize));
+	if (!m_pBuf)
+	{
+		return(false);
+	}
+	memcpy(pTmpAry, m_pBuf, sizeof(T) * m_nSize);
+	// 增加当前容量
+	m_nBufSize += nIncSize;
+	// 指向新的空间
+	m_pBuf = pTmpAry;
+
+	return(true);
 }
 
 template <typename T>
 CArray<T>::CArray() :
-	m_pBuf(new T[1]), m_pRefCnt(new size_t(1)), m_nBufSize(1), m_nSize(1)
+	m_pBuf(new T[BASESIZE]), m_nBufSize(BASESIZE), m_nSize(0)
 {
-	if (!m_pBuf || !m_pRefCnt)
+	if (!m_pBuf)
 	{
 		m_nBufSize = m_nSize = 0;
-		if (m_pRefCnt)
-		{
-			delete m_pRefCnt;
-			m_pRefCnt = nullptr;
-		}
-		if (m_pBuf)
-		{
-			delete m_pBuf;
-			m_pBuf = nullptr;
-		}
+		return;
 	}
-}
-
-template <typename T>
-CArray<T>::CArray(const CArray<T> &ary)
-{
-	CopyAry(ary);
-}
-
-template <typename T>
-void CArray<T>::CopyAry(const CArray<T> & ary)
-{
-	if (ary.m_pBuf && *(ary.m_pRefCnt) >= 1 && ary.m_nBufSize > 0)
-	{
-		GiveValue(ary);
-		// 增加引用计数
-		++(*m_pRefCnt);
-	}
-}
-
-template <typename T>
-CArray<T>::CArray(CArray<T> &&ary)
-{
-	ChkRefCntAndDec();
-	// 进行移动
-	GiveValue(ary);
-	// 清空自身
-	ary.m_pBuf = nullptr;
-	ary.m_pRefCnt = nullptr;
-	ary.m_nSize = ary.m_nBufSize = 0;
-}
-
-template <typename T>
-CArray<T> & CArray<T>::operator=(const CArray<T> &ary)
-{
-	// TODO: 在此处插入 return 语句
-	// 把自身引用计数降低或者释放
-	if (!ary.m_nBufSize || !ary.m_pBuf || !ary.m_pRefCnt)
-	{
-		return(*this);
-	}
-	// 降低自身引用或者删除
-	ChkRefCntAndDec();
-	// 拷贝过来
-	GiveValue(ary);
-	// 增加自身引用计数
-	++(*m_pRefCnt);
-}
-
-template <typename T>
-void CArray<T>::ChkRefCntAndDec()
-{
-	if (m_pBuf && m_pRefCnt && *m_pRefCnt >= 1 && m_nBufSize > 0)
-	{
-		if (*m_pRefCnt > 1)
-		{
-			// 如果有只有2个对象在引用则直接减少引用计数
-			--(*m_pRefCnt);
-			return;
-		}
-	}
-	// 全部释放
-	ReleaseAll();
-}
-
-template <typename T>
-void CArray<T>::ChkRefCntAndDec(CArray<T> &ary)
-{
-	if (ary.m_pBuf && ary.m_pRefCnt && *(ary.m_pRefCnt) >= 1 && ary.m_nBufSize > 0)
-	{
-		if (*(ary.m_pRefCnt) > 1)
-		{
-			// 如果有只有2个对象在引用则直接减少引用计数
-			--(*ary.m_pRefCnt);
-			return;
-		}
-	}
-	// 全部释放
-	ReleaseAll(ary);
+	memset(m_pBuf, 0, sizeof(T) * BASESIZE);
 }
 
 template <typename T>
@@ -206,11 +179,6 @@ void CArray<T>::ReleaseAll()
 		delete[] m_pBuf;
 		m_pBuf = nullptr;
 	}
-	if (m_pRefCnt)
-	{
-		delete m_pRefCnt;
-		m_pRefCnt = nullptr;
-	}
 	m_nSize = m_nBufSize = 0;
 }
 
@@ -222,154 +190,112 @@ void CArray<T>::ReleaseAll(CArray<T> &ary)
 		delete[] ary.m_pBuf;
 		ary.m_pBuf = nullptr;
 	}
-	if (ary.m_pRefCnt)
-	{
-		delete ary.m_pRefCnt;
-		ary.m_pRefCnt = nullptr;
-	}
 	ary.m_nSize = ary.m_nBufSize = 0;
 }
 
 template <typename T>
 CArray<T>::~CArray()
 {
-	ChkRefCntAndDec();
+	ReleaseAll();
 }
 
 template <typename T>
-CArray<T> &CArray<T>::Insert(const T &val, size_t nIdx)
+bool CArray<T>::Insert(const T &val, size_t nIdx)
 {
-	T *pArr = nullptr;
-	size_t nNewSize = m_nBufSize;
-	size_t nTmpSize = m_nSize;
-
-	// TODO: 在此处插入 return 语句
-	if (!m_nBufSize || !m_pBuf || !m_pRefCnt || nIdx > m_nSize)
+	// 如果满了就动态增加内存
+	if (!IncBufSize())
 	{
-		return(*this);
+		return(false);
 	}
-	// 空间不够的情况
-	if (m_nSize >= m_nBufSize)
+	// 如果插入位置大于当前总元素数量, 则默认插在末尾
+	if (nIdx > m_nSize)
 	{
-		nNewSize = m_nBufSize * 2;
+		nIdx = m_nSize;
 	}
-	// 分配新的空间
-	pArr = new T[nNewSize];
-	if (!pArr)
+	for (size_t nIndex = m_nSize; nIndex > nIdx; ++nIndex)
 	{
-		return(*this);
-	}
-	memset(pArr, 0, sizeof(m_pBuf[0]) * nNewSize);
-	// 防止浅拷贝, 重新构造
-	T *tmp = new T[m_nBufSize];
-	memset(tmp, 0, sizeof(m_pBuf[0]) * m_nBufSize);
-	for (int i = 0; i < m_nSize; ++i)
-	{
-		tmp[i] = m_pBuf[i];
-	}
-	memcpy(pArr, tmp, sizeof(tmp[0]) * m_nSize);
-	// 减少之前的引用
-	ChkRefCntAndDec();
-	// 更新缓冲区和新的缓冲区大小
-	m_pBuf = pArr;
-	m_nBufSize = nNewSize;
-	m_nSize = nTmpSize;
-	m_pRefCnt = new size_t(1);
-
-	for (size_t i = m_nSize; i > nIdx; --i)
-	{
-		m_pBuf[i] = m_pBuf[i - 1];
+		m_pBuf[nIndex] = m_pBuf[nIndex - 1];
 	}
 	m_pBuf[nIdx] = val;
-
 	++m_nSize;
 
-	return(*this);
+	return(true);
 }
 
 template <typename T>
-CArray<T> & CArray<T>::InsertHead(const T &val)
+bool CArray<T>::InsertHead(const T &val)
 {
 	// TODO: 在此处插入 return 语句
 	return(Insert(val, 0));
 }
 
 template <typename T>
-CArray<T> & CArray<T>::InsertTail(const T &val)
+bool CArray<T>::InsertTail(const T &val)
 {
 	// TODO: 在此处插入 return 语句
 	return(Insert(val, m_nSize));
 }
 
-template <typename T>
-CArray<T> &CArray<T>::Delete(size_t nIdx)
-{
-	T *pArr = nullptr;
-	size_t nTmpSize = m_nSize;
-	size_t nTmpBufSize = m_nBufSize;
 
-	// TODO: 在此处插入 return 语句
-	if (!m_nBufSize || !m_pBuf ||
-		!m_pRefCnt || !m_nSize || nIdx > m_nSize - 1)
+template <typename T>
+bool CArray<T>::Delete(size_t nIdx, T &val)
+{
+	// 数组内没有元素或者nIdx指向的位置超过存在元素的范围
+	if (nIdx >= m_nSize || m_nSize < 1)
 	{
-		return(*this);
+		return(false);
 	}
-	pArr = new T[m_nBufSize];
-	if (!pArr)
+	// 删除数组末尾元素直接删
+	if (nIdx == (m_nSize - 1))
 	{
-		return(*this);
+		val = m_pBuf[nIdx];
+		m_pBuf[nIdx] = 0;
 	}
-	// m_nBufSize保持不变即可
-	memset(pArr, 0, sizeof(m_pBuf[0]) * m_nBufSize);
-	// 防止浅拷贝, 重新构造
-	T *tmp = new T[m_nBufSize];
-	memset(tmp, 0, sizeof(m_pBuf[0]) * m_nBufSize);
-	for (int i = 0; i < m_nSize; ++i)
+	else
 	{
-		tmp[i] = m_pBuf[i];
-	}
-	memcpy(pArr, tmp, sizeof(tmp[0]) * m_nSize);
-	// 降低自身引用或者删除自身
-	ChkRefCntAndDec();
-	// 恢复之前的内容
-	m_nSize = nTmpSize;
-	m_nBufSize = nTmpBufSize;
-	m_pBuf = pArr;
-	m_pRefCnt = new size_t(1);
-	// 重新分配内存, 少一个
-	T *tmp1 = new T[m_nBufSize];
-	memset(tmp1, 0, sizeof(m_pBuf[0]) * m_nBufSize);
-	for (int i = 0, k = 0; i < m_nSize; ++i)
-	{
-		if (i == nIdx)
+		for (size_t nIndex = nIdx; nIndex < (m_nSize - 1); ++nIndex)
 		{
-			continue;
+			m_pBuf[nIndex] = m_pBuf[nIndex + 1];
 		}
-		tmp1[k++] = m_pBuf[i];
+		m_pBuf[m_nSize - 1] = 0;
+		
 	}
-	delete[] m_pBuf;
-	m_pBuf = tmp1;
 	--m_nSize;
 
-	return(*this);
+	return(true);
+}
+
+
+template <typename T>
+bool CArray<T>::DeleteByID(size_t nID)
+{
+	Find()
+}
+
+
+template <typename T>
+bool CArray<T>::Delete(size_t nIdx)
+{
+	T data;
+	return(Delete(nIdx, data));
 }
 
 template <typename T>
-CArray<T> & CArray<T>::DeleteHead()
+bool CArray<T>::DeleteHead(T &val)
 {
 	// TODO: 在此处插入 return 语句
-	return(Delete(0));
+	return(Delete(0, val));
 }
 
 template <typename T>
-CArray<T> & CArray<T>::DeleteTail()
+bool CArray<T>::DeleteTail(T &val)
 {
 	// TODO: 在此处插入 return 语句
-	return(Delete(m_nSize - 1));
+	return(Delete(m_nSize - 1, val));
 }
 
 template <typename T>
-T CArray<T>::operator[](size_t nIdx)
+T &CArray<T>::operator[](size_t nIdx)
 {
 	// TODO: 在此处插入 return 语句
 	return(m_pBuf[nIdx]);
@@ -378,23 +304,8 @@ T CArray<T>::operator[](size_t nIdx)
 template <typename T>
 void CArray<T>::SetValue(size_t nIdx, const T &iVal)
 {
-	T *pArr = nullptr;
-	size_t nTmpBufSize = m_nBufSize;
-	size_t nTmpSize = m_nSize;
-	pArr = new T[m_nBufSize];
-	if (!pArr)
-	{
-		return;
-	}
-	memset(pArr, 0, sizeof(pArr[0]) * m_nBufSize);
-	memcpy(pArr, m_pBuf, sizeof(pArr[0]) * m_nSize);
-	pArr[nIdx] = iVal;
-	ChkRefCntAndDec();
-
-	m_nBufSize = nTmpBufSize;
-	m_nSize = nTmpSize;
-	m_pRefCnt = new size_t(1);
-	m_pBuf = pArr;
+	
+	return;
 }
 
 template <typename T>
@@ -458,20 +369,6 @@ void CArray<T>::reverse()
 		m_pBuf[i] = m_pBuf[j];
 		m_pBuf[j] = iTmp;
 	}
-}
-
-template <typename T>
-void CArray<T>::Print()
-{
-	if (!m_pBuf)
-	{
-		return;
-	}
-	for (int i = 0; i < m_nSize; ++i)
-	{
-		cout << m_pBuf[i] << " ";
-	}
-	cout << endl;
 }
 
 

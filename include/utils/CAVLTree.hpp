@@ -28,11 +28,13 @@ public:
 	typedef struct tagTreeNode
 	{
 		tagTreeNode() = default;
-		tagTreeNode(T data) :
+		tagTreeNode(T data, size_t nID) :
 			m_data(data), m_pLeftChild(nullptr), 
-			m_pRightChild(nullptr), m_pParent(nullptr), m_nHeight(1)
+			m_pRightChild(nullptr), m_pParent(nullptr), m_nHeight(1),
+			m_nID(nID)
 		{ }
-		T m_data;
+		size_t m_nID;						// 结点的值
+		T m_data;							// 用户传入的数据
 		struct tagTreeNode *m_pLeftChild;   // 左孩子指针
 		struct tagTreeNode *m_pRightChild;  // 右孩子指针
 		struct tagTreeNode *m_pParent;		// 父结点指针
@@ -46,10 +48,41 @@ public:
 	bool FindNode(pTreeNode *ppNode, const T rcDataToFind);
 	// 判定值为rcDataToFind的结点是否存在
 	bool FindNode(const T rcDataToFind);
+	bool FindNodeByID(size_t nID);
+
+	pTreeNode FindNodeByID(size_t nID, bool &fSuccess)
+	{
+		pTreeNode pCurNode = nullptr;
+
+		pCurNode = m_pRootNode;
+
+		while (pCurNode)
+		{
+			if (pCurNode->m_nID > nID)
+			{
+				pCurNode = pCurNode->m_pLeftChild;
+			}
+			else if (pCurNode->m_nID < nID)
+			{
+				pCurNode = pCurNode->m_pRightChild;
+			}
+			else
+			{
+				fSuccess = true;
+				return(pCurNode);
+			}
+		}
+		fSuccess = false;
+
+		return(nullptr);
+	}
+	bool FindNodeByID(size_t nID, T &rDataToFind);
 	// 插入结点
-	bool InsertNode(T data);
+	bool InsertNode(T data, size_t nID);
 	// 删除结点
 	bool DeleteNode(const T &rcdata);
+	// 通过ID删除学生结点
+	bool DeleteNode(const size_t nID);
 	// 创建一个具有nDataArySize个元素的树
 	bool CreateTree(const T *pDataAry, size_t nDataArySize);
 	// 执行前序遍历
@@ -79,11 +112,197 @@ private:
 	}
 	// 重新结算当前结点高度
 	size_t CalcHeight(pTreeNode pNode);
+public:
 	// 释放树
 	void ReleaseTree();
 private:
 	pTreeNode m_pRootNode;
 };
+
+template <typename T>
+bool CAVLTree<T>::DeleteNode(const size_t nID)
+{
+	pTreeNode pDelNode = nullptr;
+	pTreeNode pParentNodeOfDelNode = nullptr;
+	pTreeNode pCurNode = nullptr;
+	bool fOk = false;
+
+	// 空树直接返回false
+	if (!m_pRootNode)
+	{
+		return(false);
+	}
+	// 查找要删除的结点, 没有找到直接返回false
+	pDelNode = FindNodeByID(nID, fOk);
+	if (!fOk)
+	{
+		return(false);
+	}
+	// 如果是根节点则直接删除后成功
+	if (m_pRootNode == pDelNode)
+	{
+		delete m_pRootNode;
+		m_pRootNode = nullptr;
+		return(true);
+	}
+	// 找到父节点
+	pParentNodeOfDelNode = pDelNode->m_pParent;
+	// 该结点没有子节点
+	if (!pDelNode->m_pLeftChild && !pDelNode->m_pRightChild)
+	{
+		if (pDelNode == pParentNodeOfDelNode->m_pLeftChild)
+		{
+			pCurNode = pParentNodeOfDelNode->m_pLeftChild;
+			pParentNodeOfDelNode->m_pLeftChild = nullptr;
+		}
+		else
+		{
+			pCurNode = pParentNodeOfDelNode->m_pRightChild;
+			pParentNodeOfDelNode->m_pRightChild = nullptr;
+		}
+	}
+	else if (pDelNode->m_pLeftChild && pDelNode->m_pRightChild)
+	{
+		pTreeNode pDelLeftChild = nullptr;
+		pTreeNode pDelLeftAndMostRightChild = nullptr;
+		pTreeNode pParentNode = nullptr;
+
+		pDelLeftChild = pDelNode->m_pLeftChild;
+		pDelLeftAndMostRightChild = pDelLeftChild->m_pRightChild;
+		// 找到结点左子树的最右结点
+		while (pDelLeftAndMostRightChild)
+		{
+			pParentNode = pDelLeftAndMostRightChild;
+			pDelLeftAndMostRightChild = pDelLeftAndMostRightChild->m_pRightChild;
+		}
+		if (!pParentNode)
+		{
+			// 如果左子结点没有右子树, 直接把左子结点的值给需要删除的结点, 然后删除左子结点
+			// 获取需要删除的结点
+			pCurNode = pDelNode->m_pLeftChild;
+			pDelNode->m_data = pDelLeftChild->m_data;
+			pDelNode->m_pLeftChild = pDelLeftChild->m_pLeftChild;
+			if (pDelLeftChild->m_pLeftChild)
+			{
+				pDelLeftChild->m_pLeftChild->m_pParent = pDelNode;
+			}
+		}
+		else
+		{
+			// 如果做左子节点存在右子树
+			pCurNode = pParentNode;
+			pDelNode->m_data = pParentNode->m_data;
+
+			if (pParentNode->m_pLeftChild)
+			{
+				pParentNode->m_pParent->m_pRightChild = pParentNode->m_pLeftChild;
+			}
+			else
+			{
+				pParentNode->m_pParent->m_pRightChild = nullptr;
+			}
+		}
+	}
+	else
+	{
+		// 该结点存在1个子树
+		if (pDelNode->m_pLeftChild)
+		{
+			// 被删除结点存在左子树
+			if (pDelNode == pParentNodeOfDelNode->m_pLeftChild)
+			{
+				// 被删结点自身是左结点
+				pDelNode->m_pParent->m_pLeftChild = pDelNode->m_pLeftChild;
+				pDelNode->m_pLeftChild->m_pParent = pDelNode->m_pParent;
+			}
+			else
+			{
+				// 被删结点自身是右结点
+				pDelNode->m_pParent->m_pRightChild = pDelNode->m_pLeftChild;
+				pDelNode->m_pLeftChild->m_pParent = pDelNode->m_pParent;
+			}
+		}
+		else
+		{
+			// 被删除结点存在右子树
+			if (pDelNode == pParentNodeOfDelNode->m_pLeftChild)
+			{
+				// 被删结点自身是左结点
+				pCurNode = pDelNode->m_pParent->m_pLeftChild;
+				pDelNode->m_pParent->m_pLeftChild = pDelNode->m_pRightChild;
+				pDelNode->m_pRightChild->m_pParent = pDelNode->m_pParent;
+			}
+			else
+			{
+				// 被删结点自身是右结点
+				pCurNode = pDelNode->m_pParent->m_pRightChild;
+				pDelNode->m_pParent->m_pRightChild = pDelNode->m_pRightChild;
+				pDelNode->m_pRightChild->m_pParent = pDelNode->m_pParent;
+			}
+		}
+	}
+	AdjustHeight(pCurNode->m_pParent);
+	if (pCurNode)
+	{
+		delete pCurNode;
+		pCurNode = nullptr;
+	}
+
+	return(true);
+}
+
+template <typename T>
+bool CAVLTree<T>::FindNodeByID(size_t nID, T &rDataToFind)
+{
+	pTreeNode pCurNode = nullptr;
+
+	pCurNode = m_pRootNode;
+
+	while (pCurNode)
+	{
+		if (pCurNode->m_nID > nID)
+		{
+			pCurNode = pCurNode->m_pLeftChild;
+		}
+		else if (pCurNode->m_nID < nID)
+		{
+			pCurNode = pCurNode->m_pRightChild;
+		}
+		else
+		{
+			rDataToFind = pCurNode->m_data;
+			return(true);
+		}
+	}
+
+	return(false);
+}
+
+template <typename T>
+bool CAVLTree<T>::FindNodeByID(size_t nID)
+{
+	pTreeNode pCurNode = nullptr;
+
+	pCurNode = m_pRootNode;
+
+	while (pCurNode)
+	{
+		if (pCurNode->m_nID > nID)
+		{
+			pCurNode = pCurNode->m_pLeftChild;
+		}
+		else if (pCurNode->m_nID < nID)
+		{
+			pCurNode = pCurNode->m_pRightChild;
+		}
+		else
+		{
+			return(true);
+		}
+	}
+
+	return(false);
+}
 
 template <typename T>
 CAVLTree<T>::~CAVLTree()
@@ -686,9 +905,8 @@ bool CAVLTree<T>::FindNode(TreeNode &rNode, const T rcDataToFind)
 }
 
 
-
 template <typename T>
-bool CAVLTree<T>::InsertNode(T data)
+bool CAVLTree<T>::InsertNode(T data, size_t nID)
 {
 	pTreeNode pCurNode = m_pRootNode;
 	pTreeNode pParentNode = nullptr;
@@ -697,7 +915,7 @@ bool CAVLTree<T>::InsertNode(T data)
 	do
 	{
 		// 分配新结点
-		pNewNode = new TreeNode(data);
+		pNewNode = new TreeNode(data, nID);
 		if (!pNewNode)
 		{
 			break;
@@ -715,11 +933,11 @@ bool CAVLTree<T>::InsertNode(T data)
 		{
 			// 保存前结点
 			pParentNode = pCurNode;
-			if (pCurNode->m_data > data)
+			if (pCurNode->m_nID > nID)
 			{
 				pCurNode = pCurNode->m_pLeftChild;
 			}
-			else if (pCurNode->m_data < data)
+			else if (pCurNode->m_nID < nID)
 			{
 				pCurNode = pCurNode->m_pRightChild;
 			}
@@ -729,7 +947,7 @@ bool CAVLTree<T>::InsertNode(T data)
 			}
 		}
 		// 判断插入的位置并插入新结点
-		if (pParentNode->m_data > data)
+		if (pParentNode->m_nID > nID)
 		{
 			pParentNode->m_pLeftChild = pNewNode;
 			pNewNode->m_pParent = pParentNode;
@@ -740,7 +958,7 @@ bool CAVLTree<T>::InsertNode(T data)
 			pNewNode->m_pParent = pParentNode;
 		}
 		AdjustHeight(pNewNode);
-		
+
 	} while (false);
 
 	return(true);
