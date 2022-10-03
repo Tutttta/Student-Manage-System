@@ -4,7 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstring>
-#include <ctime>
+#include <conio.h>
 
 #include "MD5.h"
 #include "CList.hpp"
@@ -13,8 +13,6 @@
 #include "CStack.hpp"
 #include "CQueue.hpp"
 #include "CAVLTree.hpp"
-
-//#include "MockingString.h"
 
 #define UINT unsigned int 
 #define ULONGLONG unsigned long long 
@@ -50,9 +48,9 @@ typedef enum _eMenuType
 	DELETE		// 删除子菜单
 } eMenuType;
 
-
 typedef struct tagStudentCourse
 {
+	friend ostream &operator<<(ostream &os, const tagStudentCourse &stInfo);
 	CMyString strCourseName;	// 课程名字
 	UINT uiPoint;				// 课程对应的分数
 } StudentCourse, *pStudentCourse;
@@ -92,7 +90,9 @@ typedef struct tagSearchIDByStudentName
 // 课程名 => ID √
 typedef struct tagStuChosenCourse
 {
+	friend ostream &operator<<(ostream &os, const tagStuChosenCourse &stInfo);
 	CMyString strName;		// 学生姓名
+	size_t nStuID;			// 学生ID
 	UINT uiPoint;			// 学生的成绩
 } StuChosenCourse, *pstStuChosenCourse;
 typedef struct tagCourse
@@ -128,10 +128,4 @@ extern CAVLTree<stSearchIDByCourseName> g_stSrhCourseNameTree;
 
 // 学生信息的平衡二叉搜索树, 管理通过学生名查询ID等信息
 extern CAVLTree<stSearchIDByStudentName> g_stSrhStudentNameTree;
-
-
-stSearchIDByStudentName *BinSrhStuName(pstSearchIDByStudentName pstSrhStuInfo, size_t nLen, size_t nObjHash);
-
-// 清理缓存
-void ClearBuffer();
 #endif 

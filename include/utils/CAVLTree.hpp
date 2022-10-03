@@ -19,6 +19,7 @@ Abstract:
 --*/
 #include "CStack.hpp"
 #include "CQueue.hpp"
+#include "MD5.h"
 
 template <typename T>
 class CAVLTree
@@ -43,18 +44,148 @@ public:
 public:
 	CAVLTree() : m_pRootNode(nullptr) {}
 	~CAVLTree();
+	
 	// 寻找结点, 寻找值为rcDataToFind的结点并将结点的引用通过参数传回
 	bool FindNode(TreeNode &rNode, const T rcDataToFind);
 	bool FindNode(pTreeNode *ppNode, const T rcDataToFind);
 	// 判定值为rcDataToFind的结点是否存在
 	bool FindNode(const T rcDataToFind);
 	bool FindNodeByID(size_t nID);
+	// 通过结点值(nID)找到结点所携带的信息
+	bool FindNodeByID(size_t nID, T &rDataToFind);
+	// 通过结点值(nID)找到指向结点所携带的信息的指针
+	T *FindNodeDataPtrByID(size_t nID);
+	// 通过结点值(nID)找到指向结点的指针
+	pTreeNode FindNodePtrByID(size_t nID)
+	{
+		pTreeNode pCurNode = nullptr;
 
+		pCurNode = m_pRootNode;
+
+		while (pCurNode)
+		{
+			if (pCurNode->m_nID > nID)
+			{
+				pCurNode = pCurNode->m_pLeftChild;
+			}
+			else if (pCurNode->m_nID < nID)
+			{
+				pCurNode = pCurNode->m_pRightChild;
+			}
+			else
+			{
+				return(pCurNode);
+			}
+		}
+
+		return(nullptr);
+	}
+	// 从课程AVL树上删除选择了该课程的所有学生记录
+	bool DeleteStuChosenCourseFromCourseInfoTree(const char *pcszCourseName, 
+		size_t nCourseNameHash, const char *pcszStuName);
+	// 从学生AVL树上删除选修了该课程的所有记录
+	bool DeleteCoursePointRecFromStudentInfoTree(const char *pcszStudentName,
+		size_t nStudentNameHash, const char *pcszCoName);
+	// 通过学生名在g_stSrhStudentNameTree中找到对应的ID号
+	unsigned int FindStudentIDByStudentName(const char *pcszStudentName,
+		size_t nHash,
+		bool &fSuccess)
+	{
+		stSearchIDByStudentName stSrhStuName;
+		size_t nID = 0;
+
+		fSuccess = false;
+		// 通过HASH值查找对应学生信息
+		fSuccess = g_stSrhStudentNameTree.FindNodeByID(nHash, stSrhStuName);
+		// 通过学生名查询ID号
+		if (fSuccess)
+		{
+			// 该hash下有多个对应的课程, 通过课程名进一步确认
+			fSuccess = stSrhStuName.lstStudentName.FindCoId(pcszStudentName, nID);
+			if (fSuccess)
+			{
+				return(nID);
+			}
+		}
+
+		return(0);
+	}
+	// 通过课程名在stSearchIDByCourseName中找到对应的ID号
+	unsigned int FindCourseIDByCourseName(const char *pcszCourseName, 
+		size_t nHash, 
+		bool &fSuccess)
+	{
+		stSearchIDByCourseName stSrhCoName;
+		size_t nID = 0;
+
+		fSuccess = false;
+		// 通过HASH值查找对应课程信息
+		fSuccess = g_stSrhCourseNameTree.FindNodeByID(nHash, stSrhCoName);
+		// 通过课程名查询ID号
+		if (fSuccess)
+		{
+			// 该hash下有多个对应的课程, 通过课程名进一步确认
+			fSuccess = stSrhCoName.lstCourseName.FindCoId(pcszCourseName, nID);
+			if (fSuccess)
+			{
+				return(nID);
+			}
+		}
+
+		return(0);
+	}
+	// 通过学生名来找到结点指针
+	pTreeNode FindNodeByStudentName(const char *pcszStudentName, size_t nHash, bool &fSuccess)
+	{
+		pTreeNode pCurNode = nullptr;
+		unsigned int uiCourseID = 0;
+		unsigned int nID = 0;
+
+		pCurNode = m_pRootNode;
+
+		if (!pCurNode)
+		{
+			return(nullptr);
+		}
+
+		nID = FindStudentIDByStudentName(pcszStudentName, nHash, fSuccess);
+		if (!fSuccess)
+		{
+			return(nullptr);
+		}
+		return(FindNodePtrByID(nID));
+	}
+	// 通过课程名来找到结点
+	pTreeNode FindNodeByCourseName(const char *pcszCourseName, size_t nHash, bool &fSuccess)
+	{
+		pTreeNode pCurNode = nullptr;
+		pstCourse pstCo = nullptr;
+		unsigned int uiCourseID = 0;
+		unsigned int nID = 0;
+
+		pCurNode = m_pRootNode;
+
+		if (!pCurNode)
+		{
+			return(nullptr);
+		}
+		
+		nID = FindCourseIDByCourseName(pcszCourseName, nHash, fSuccess);
+		if (!fSuccess)
+		{
+			return(nullptr);
+		}
+		return(FindNodePtrByID(nID));
+	}
 	pTreeNode FindNodeByID(size_t nID, bool &fSuccess)
 	{
 		pTreeNode pCurNode = nullptr;
 
 		pCurNode = m_pRootNode;
+		if (!pCurNode)
+		{
+			return(nullptr);
+		}
 
 		while (pCurNode)
 		{
@@ -76,13 +207,17 @@ public:
 
 		return(nullptr);
 	}
-	bool FindNodeByID(size_t nID, T &rDataToFind);
+	
 	// 插入结点
 	bool InsertNode(T data, size_t nID);
 	// 删除结点
 	bool DeleteNode(const T &rcdata);
 	// 通过ID删除学生结点
 	bool DeleteNode(const size_t nID);
+	// 通过ID删除学生结点并返回该学生所选课程
+	bool DeleteNodeStu(const size_t nID, CArray<char *> &cCourseNameAry);
+	// 通过ID删除课程结点并返回该选择该课程的学生名数组
+	bool DeleteNodeCo(const size_t nID, CArray<char *> &cStuNameAry);
 	// 创建一个具有nDataArySize个元素的树
 	bool CreateTree(const T *pDataAry, size_t nDataArySize);
 	// 执行前序遍历
@@ -112,12 +247,392 @@ private:
 	}
 	// 重新结算当前结点高度
 	size_t CalcHeight(pTreeNode pNode);
+
+	size_t NameHashCalc(const char *pcszName, size_t nSize)
+	{
+		size_t nHash = 0;
+		MD5_CTX Md5;
+		unsigned char szMd5[32] = { 0 };
+
+		if (!pcszName || !nSize)
+		{
+			return(0);
+		}
+		MD5Init(&Md5);
+		// 计算md5值
+		MD5Update(&Md5, (unsigned char *)pcszName, nSize);
+		MD5Final(&Md5, (unsigned char *)szMd5);
+
+		// 计算md5算出来的Hash值
+		for (size_t nIdx = 0; nIdx < 16; ++nIdx)
+		{
+			nHash += szMd5[nIdx];
+		}
+
+		return(nHash);
+	}
 public:
 	// 释放树
 	void ReleaseTree();
 private:
 	pTreeNode m_pRootNode;
 };
+
+template <typename T>
+bool CAVLTree<T>::DeleteCoursePointRecFromStudentInfoTree(
+	const char *pcszStudentName, 
+	size_t nStudentNameHash, 
+	const char *pcszCoName)
+{
+	bool fOk = false;
+	unsigned int uiID = 0;
+	pTreeNode pNode = nullptr;
+	pstStuInfo pstStu = nullptr;
+
+	if (!pcszStudentName || !pcszCoName)
+	{
+		return(false);
+	}
+	// 通过学生名找到AVL学生结点
+	pNode = FindNodeByStudentName(pcszStudentName, nStudentNameHash, fOk);
+	if (!pNode)
+	{
+		return(false);
+	}
+	pstStu = (pstStuInfo)&pNode->m_data;
+	// 通过修了该课程的学生名删除AVL课程链表中的选课学生链表结点
+	fOk = pstStu->lstOfCourse.DeleteCourseRecordFromStudentTreeCourseList(pcszCoName);
+
+	return(fOk);
+}
+
+template <typename T>
+bool CAVLTree<T>::DeleteStuChosenCourseFromCourseInfoTree(
+	const char *pcszCourseName, 
+	size_t nCourseNameHash,
+	const char *pcszStuName)
+{
+	bool fOk = false;
+	unsigned int uiID = 0;
+	pTreeNode pNode = nullptr;
+	pstCourse pstCo = nullptr;
+
+	if (!pcszCourseName || !pcszStuName)
+	{
+		return(false);
+	}
+	// 通过课程名找到AVL课程结点
+	pNode = FindNodeByCourseName(pcszCourseName, nCourseNameHash, fOk);
+	if (!pNode)
+	{
+		return(false);
+	}
+	pstCo = (pstCourse)&pNode->m_data;
+	// 通过修了该课程的学生名删除AVL课程链表中的选课学生链表结点
+	fOk = pstCo->lstOfStu.DeleteStudentRecordFromCourseTreeStudentList(pcszStuName);
+
+	return(fOk);
+}
+
+
+template <typename T>
+bool CAVLTree<T>::DeleteNodeCo(const size_t nID, CArray<char *> &cStuNameAry)
+{
+	pTreeNode pDelNode = nullptr;
+	pTreeNode pParentNodeOfDelNode = nullptr;
+	pTreeNode pCurNode = nullptr;
+	pstCourse pCoInfo = nullptr;
+	bool fOk = false;
+
+	// 空树直接返回false
+	if (!m_pRootNode)
+	{
+		return(false);
+	}
+	// 查找要删除的结点, 没有找到直接返回nullptr
+	pDelNode = FindNodeByID(nID, fOk);
+	if (!fOk)
+	{
+		return(false);
+	}
+	pCoInfo = (pstCourse)&pDelNode->m_data;
+	pCoInfo->lstOfStu.GetCourseListNamesAryStu(cStuNameAry);
+
+	// 如果是根节点则直接删除后成功
+	if (m_pRootNode == pDelNode)
+	{
+		delete m_pRootNode;
+		m_pRootNode = nullptr;
+		return(true);
+	}
+	// 找到父节点
+	pParentNodeOfDelNode = pDelNode->m_pParent;
+	// 该结点没有子节点
+	if (!pDelNode->m_pLeftChild && !pDelNode->m_pRightChild)
+	{
+		if (pDelNode == pParentNodeOfDelNode->m_pLeftChild)
+		{
+			pCurNode = pParentNodeOfDelNode->m_pLeftChild;
+			pParentNodeOfDelNode->m_pLeftChild = nullptr;
+		}
+		else
+		{
+			pCurNode = pParentNodeOfDelNode->m_pRightChild;
+			pParentNodeOfDelNode->m_pRightChild = nullptr;
+		}
+	}
+	else if (pDelNode->m_pLeftChild && pDelNode->m_pRightChild)
+	{
+		pTreeNode pDelLeftChild = nullptr;
+		pTreeNode pDelLeftAndMostRightChild = nullptr;
+		pTreeNode pParentNode = nullptr;
+
+		pDelLeftChild = pDelNode->m_pLeftChild;
+		pDelLeftAndMostRightChild = pDelLeftChild->m_pRightChild;
+		// 找到结点左子树的最右结点
+		while (pDelLeftAndMostRightChild)
+		{
+			pParentNode = pDelLeftAndMostRightChild;
+			pDelLeftAndMostRightChild = pDelLeftAndMostRightChild->m_pRightChild;
+		}
+		if (!pParentNode)
+		{
+			// 如果左子结点没有右子树, 直接把左子结点的值给需要删除的结点, 然后删除左子结点
+			// 获取需要删除的结点
+			pCurNode = pDelNode->m_pLeftChild;
+			pDelNode->m_data = pDelLeftChild->m_data;
+			pDelNode->m_pLeftChild = pDelLeftChild->m_pLeftChild;
+			if (pDelLeftChild->m_pLeftChild)
+			{
+				pDelLeftChild->m_pLeftChild->m_pParent = pDelNode;
+			}
+		}
+		else
+		{
+			// 如果做左子节点存在右子树
+			pCurNode = pParentNode;
+			pDelNode->m_data = pParentNode->m_data;
+
+			if (pParentNode->m_pLeftChild)
+			{
+				pParentNode->m_pParent->m_pRightChild = pParentNode->m_pLeftChild;
+			}
+			else
+			{
+				pParentNode->m_pParent->m_pRightChild = nullptr;
+			}
+		}
+	}
+	else
+	{
+		// 该结点存在1个子树
+		if (pDelNode->m_pLeftChild)
+		{
+			// 被删除结点存在左子树
+			if (pDelNode == pParentNodeOfDelNode->m_pLeftChild)
+			{
+				// 被删结点自身是左结点
+				pDelNode->m_pParent->m_pLeftChild = pDelNode->m_pLeftChild;
+				pDelNode->m_pLeftChild->m_pParent = pDelNode->m_pParent;
+			}
+			else
+			{
+				// 被删结点自身是右结点
+				pDelNode->m_pParent->m_pRightChild = pDelNode->m_pLeftChild;
+				pDelNode->m_pLeftChild->m_pParent = pDelNode->m_pParent;
+			}
+		}
+		else
+		{
+			// 被删除结点存在右子树
+			if (pDelNode == pParentNodeOfDelNode->m_pLeftChild)
+			{
+				// 被删结点自身是左结点
+				pCurNode = pDelNode->m_pParent->m_pLeftChild;
+				pDelNode->m_pParent->m_pLeftChild = pDelNode->m_pRightChild;
+				pDelNode->m_pRightChild->m_pParent = pDelNode->m_pParent;
+			}
+			else
+			{
+				// 被删结点自身是右结点
+				pCurNode = pDelNode->m_pParent->m_pRightChild;
+				pDelNode->m_pParent->m_pRightChild = pDelNode->m_pRightChild;
+				pDelNode->m_pRightChild->m_pParent = pDelNode->m_pParent;
+			}
+		}
+	}
+	AdjustHeight(pCurNode->m_pParent);
+	if (pCurNode)
+	{
+		delete pCurNode;
+		pCurNode = nullptr;
+	}
+
+	return(true);
+}
+
+template <typename T>
+bool CAVLTree<T>::DeleteNodeStu(const size_t nID, CArray<char *> &cCourseNameAry)
+{
+	pTreeNode pDelNode = nullptr;
+	pTreeNode pParentNodeOfDelNode = nullptr;
+	pTreeNode pCurNode = nullptr;
+	pstStuInfo pStuInfo = nullptr;
+	bool fOk = false;
+
+	// 空树直接返回false
+	if (!m_pRootNode)
+	{
+		return(false);
+	}
+	// 查找要删除的结点, 没有找到直接返回nullptr
+	pDelNode = FindNodeByID(nID, fOk);
+	if (!fOk)
+	{
+		return(false);
+	}
+	pStuInfo = (pstStuInfo)&pDelNode->m_data;
+	pStuInfo->lstOfCourse.GetCourseListNamesAry(cCourseNameAry);
+
+	// 如果是根节点则直接删除后成功
+	if (m_pRootNode == pDelNode)
+	{
+		delete m_pRootNode;
+		m_pRootNode = nullptr;
+		return(true);
+	}
+	// 找到父节点
+	pParentNodeOfDelNode = pDelNode->m_pParent;
+	// 该结点没有子节点
+	if (!pDelNode->m_pLeftChild && !pDelNode->m_pRightChild)
+	{
+		if (pDelNode == pParentNodeOfDelNode->m_pLeftChild)
+		{
+			pCurNode = pParentNodeOfDelNode->m_pLeftChild;
+			pParentNodeOfDelNode->m_pLeftChild = nullptr;
+		}
+		else
+		{
+			pCurNode = pParentNodeOfDelNode->m_pRightChild;
+			pParentNodeOfDelNode->m_pRightChild = nullptr;
+		}
+	}
+	else if (pDelNode->m_pLeftChild && pDelNode->m_pRightChild)
+	{
+		pTreeNode pDelLeftChild = nullptr;
+		pTreeNode pDelLeftAndMostRightChild = nullptr;
+		pTreeNode pParentNode = nullptr;
+
+		pDelLeftChild = pDelNode->m_pLeftChild;
+		pDelLeftAndMostRightChild = pDelLeftChild->m_pRightChild;
+		// 找到结点左子树的最右结点
+		while (pDelLeftAndMostRightChild)
+		{
+			pParentNode = pDelLeftAndMostRightChild;
+			pDelLeftAndMostRightChild = pDelLeftAndMostRightChild->m_pRightChild;
+		}
+		if (!pParentNode)
+		{
+			// 如果左子结点没有右子树, 直接把左子结点的值给需要删除的结点, 然后删除左子结点
+			// 获取需要删除的结点
+			pCurNode = pDelNode->m_pLeftChild;
+			pDelNode->m_data = pDelLeftChild->m_data;
+			pDelNode->m_pLeftChild = pDelLeftChild->m_pLeftChild;
+			if (pDelLeftChild->m_pLeftChild)
+			{
+				pDelLeftChild->m_pLeftChild->m_pParent = pDelNode;
+			}
+		}
+		else
+		{
+			// 如果做左子节点存在右子树
+			pCurNode = pParentNode;
+			pDelNode->m_data = pParentNode->m_data;
+
+			if (pParentNode->m_pLeftChild)
+			{
+				pParentNode->m_pParent->m_pRightChild = pParentNode->m_pLeftChild;
+			}
+			else
+			{
+				pParentNode->m_pParent->m_pRightChild = nullptr;
+			}
+		}
+	}
+	else
+	{
+		// 该结点存在1个子树
+		if (pDelNode->m_pLeftChild)
+		{
+			// 被删除结点存在左子树
+			if (pDelNode == pParentNodeOfDelNode->m_pLeftChild)
+			{
+				// 被删结点自身是左结点
+				pDelNode->m_pParent->m_pLeftChild = pDelNode->m_pLeftChild;
+				pDelNode->m_pLeftChild->m_pParent = pDelNode->m_pParent;
+			}
+			else
+			{
+				// 被删结点自身是右结点
+				pDelNode->m_pParent->m_pRightChild = pDelNode->m_pLeftChild;
+				pDelNode->m_pLeftChild->m_pParent = pDelNode->m_pParent;
+			}
+		}
+		else
+		{
+			// 被删除结点存在右子树
+			if (pDelNode == pParentNodeOfDelNode->m_pLeftChild)
+			{
+				// 被删结点自身是左结点
+				pCurNode = pDelNode->m_pParent->m_pLeftChild;
+				pDelNode->m_pParent->m_pLeftChild = pDelNode->m_pRightChild;
+				pDelNode->m_pRightChild->m_pParent = pDelNode->m_pParent;
+			}
+			else
+			{
+				// 被删结点自身是右结点
+				pCurNode = pDelNode->m_pParent->m_pRightChild;
+				pDelNode->m_pParent->m_pRightChild = pDelNode->m_pRightChild;
+				pDelNode->m_pRightChild->m_pParent = pDelNode->m_pParent;
+			}
+		}
+	}
+	AdjustHeight(pCurNode->m_pParent);
+	if (pCurNode)
+	{
+		delete pCurNode;
+		pCurNode = nullptr;
+	}
+
+	return(true);
+}
+
+
+template <typename T>
+T * CAVLTree<T>::FindNodeDataPtrByID(size_t nID)
+{
+	pTreeNode pCurNode = nullptr;
+
+	pCurNode = m_pRootNode;
+
+	while (pCurNode)
+	{
+		if (pCurNode->m_nID > nID)
+		{
+			pCurNode = pCurNode->m_pLeftChild;
+		}
+		else if (pCurNode->m_nID < nID)
+		{
+			pCurNode = pCurNode->m_pRightChild;
+		}
+		else
+		{
+			return(&pCurNode->m_data);
+		}
+	}
+
+	return(nullptr);
+}
 
 template <typename T>
 bool CAVLTree<T>::DeleteNode(const size_t nID)

@@ -1,8 +1,5 @@
 #include "Control.h"
 #include "MockingString.h"
-#include <conio.h>
-
-
 
 void Control::Run()
 {
@@ -61,6 +58,7 @@ void Control::Run()
 	return;
 }
 
+
 BOOLEAN Control::InitSystem()
 {
 	char szStudentNameFilePath[LINEMAX] = { 0 };
@@ -116,6 +114,7 @@ BOOLEAN Control::InitSystem()
 	return(bInitSuccess);
 }
 
+
 BOOLEAN Control::InitStudentInfo(PPSTR ppstrStudentNameAry, size_t nSize)
 {
 	BOOLEAN fOk = TRUE;
@@ -150,16 +149,6 @@ BOOLEAN Control::InitStudentInfo(PPSTR ppstrStudentNameAry, size_t nSize)
 			break;
 		}
 	}
-
-# if 0
-	for (size_t nIdx = 0; nIdx < g_stAryOfStudentName.GetSize(); ++nIdx)
-	{
-		cout << "学生名: " << g_stAryOfStudentName[nIdx].strStudentName << endl;
-		cout << "ID: " << g_stAryOfStudentName[nIdx].uiStudentID << endl;
-		cout << "Hash: " << g_stAryOfStudentName[nIdx].nNameHash << endl;
-		cout << endl;
-	}
-#endif
 	
 	return(fOk);
 }
@@ -197,38 +186,16 @@ BOOLEAN Control::InitCourseInfo(PPSTR ppstrCourseNameAry, size_t nSize)
 		}
 	}
 
-#if 0
-	for (size_t nIdx = 0; nIdx < g_stAryOfCourseName.GetSize(); ++nIdx)
-	{
-		cout << "课程名: " << g_stAryOfCourseName[nIdx].strCourseName << endl;
-		cout << "ID: " << g_stAryOfCourseName[nIdx].uiCourseID << endl;
-		cout << "Hash: " << g_stAryOfCourseName[nIdx].nNameHash << endl;
-		cout << endl;
-	}
-#endif
-	
 	return(fOk);
 }
 
-/*
-// 一棵BST树存储 ID作为结点值, 存储tagStudentInfo结构体
-// 学生ID => 学生姓名 √
-// 学生ID => 学生选修的课程信息 √
-// 学生姓名 => 学生ID √
-typedef struct tagStudentInfo
-{
-	UINT uiID;							// 学生ID
-	CMyString strName;					// 学生姓名
-	CList<StudentCourse> lstOfCourse;	// 学生课程和成绩链表
-} stStuInfo, *pstStuInfo;
 
-
-*/
 BOOLEAN Control::InitSystemData()
 {
 	
 	return(TRUE);
 }
+
 
 BOOLEAN Control::ChkInitFileExists(PSTR pszFilePathName, size_t nSize, PCSTR pcszFileName/* = STUDENTFILENAME*/)
 {
@@ -313,7 +280,7 @@ BOOLEAN Control::SetSearchIDByStudentNameStructure(PSTR pStrName, size_t nID)
 		stSrhStuName.nNameHash = nHash;
 		// 将学生名和ID插入链表
 		stSrhStuName.lstStudentName.InsertTail(stStuNameId);
-		g_stSrhStudentNameTree.InsertNode(stSrhStuName, nHash);
+		fOk = g_stSrhStudentNameTree.InsertNode(stSrhStuName, nHash);
 	}
 	else
 	{
@@ -321,7 +288,7 @@ BOOLEAN Control::SetSearchIDByStudentNameStructure(PSTR pStrName, size_t nID)
 		pTreeNode->m_data.lstStudentName.InsertTail(stStuNameId);
 	}
 
-	return(TRUE);
+	return(fOk);
 }
 
 BOOLEAN Control::SetSearchIDByCourseNameStructure(PSTR pStrName, size_t nID)
@@ -348,8 +315,9 @@ BOOLEAN Control::SetSearchIDByCourseNameStructure(PSTR pStrName, size_t nID)
 	{
 		// 没有找到代表未重复, 新创建
 		stSrhCoName.nNameHash = nHash;
-		// 将学生名和ID插入链表
+		// 将课程名和ID插入链表
 		stSrhCoName.lstCourseName.InsertTail(stCoNameId);
+		fOk = g_stSrhCourseNameTree.InsertNode(stSrhCoName, nHash);
 	}
 	else
 	{
@@ -357,8 +325,9 @@ BOOLEAN Control::SetSearchIDByCourseNameStructure(PSTR pStrName, size_t nID)
 		pTreeNode->m_data.lstCourseName.InsertTail(stCoNameId);
 	}
 
-	return(TRUE);
+	return(fOk);
 }
+
 
 void Control::ClearScreenAndOutput(PCSTR pszText, BOOLEAN fNextLine /*= TRUE*/)
 {
@@ -371,18 +340,10 @@ void Control::ClearScreenAndOutput(PCSTR pszText, BOOLEAN fNextLine /*= TRUE*/)
 			cout << endl;
 		}
 	}
-	system("pause");
-	system("cls");
+	PAUSEANDCLS();
 }
 
-/*
-	puts("插入功能子菜单: ");
-	// ID和名字
-	puts("1. 新增学生");
-	puts("2. 新增课程");
-	puts("3. 新增记录");
-	printf("命令: ");
-*/
+
 void Control::Insert()
 {
 	int iCmd = 0;
@@ -390,6 +351,7 @@ void Control::Insert()
 
 	do
 	{
+		system("cls");
 		m_UI.PrintMenu(INSERT);
 		scanf("%d", &iCmd);
 		getchar();
@@ -415,7 +377,6 @@ void Control::Insert()
 			}
 			case 4:
 			{
-				system("cls");
 				break;
 			}
 			default:
@@ -424,6 +385,7 @@ void Control::Insert()
 				break;
 			}
 		}
+		system("cls");
 	} while (iCmd != 4);
 
 	return;
@@ -434,17 +396,9 @@ void Control::Delete()
 	int iCmd = 0;
 	BOOLEAN fOk = TRUE;
 
-	/*
-	puts("删除功能子菜单: ");
-	// ID
-	puts("1. 删除学生");
-	puts("2. 删除课程");
-	puts("3. 删除选课记录");
-	puts("4. 返回上一级");
-	printf("命令: ");
-	*/
 	do
 	{
+		system("cls");
 		m_UI.PrintMenu(DELETE);
 		scanf("%d", &iCmd);
 		getchar();
@@ -489,17 +443,7 @@ void Control::Query()
 	int iCmd = 0;
 	BOOLEAN fOk = TRUE;
 
-	/*
-	puts("查询功能子菜单: ");
-	// ID
-	puts("1. 通过学生ID查询学生姓名");
-	puts("2. 通过学生姓名查询学生ID");
-	puts("3. 通过课程ID查询课程名");
-	puts("4. 通过课程名查询课程ID");
-	puts("5. 通过课程ID查询选修了该课程的学生以及成绩");
-	puts("6. 通过学生ID查询该学生选修的课程信息");
-	printf("命令: ");
-	*/
+	system("cls");
 	do
 	{
 		m_UI.PrintMenu(QUERY);
@@ -603,13 +547,13 @@ void Control::AddStudent()
 		}
 		// 存储结点信息
 		strncpy_s(pszNameBuf, nLen + 1, szNameBufTmp, sizeof(szNameBufTmp));
-		stInfo.uiID = uiID;
-		stInfo.strName = pszNameBuf;
 		// 填充stSearchIDByStudentName结构体
 		fOk = SetSearchIDByStudentNameStructure(pszNameBuf, uiID);
 		{
 			if (fOk)
 			{
+				stInfo.uiID = uiID;
+				stInfo.strName = pszNameBuf;
 				// 把结点插入二叉树
 				fOk = g_stStudentInfoTree.InsertNode(stInfo, uiID);
 			}
@@ -647,7 +591,7 @@ void Control::AddCourse()
 
 	do
 	{
-		// 获取新同学ID值
+		// 获取新课程ID值
 		do
 		{
 			cout << "输入新课程ID: ";
@@ -682,16 +626,12 @@ void Control::AddCourse()
 		}
 		// 存储结点信息
 		strncpy_s(pszNameBuf, nLen + 1, szNameBufTmp, sizeof(szNameBufTmp));
-
-		// 填充stSearchIDByStudentName结构体
-		//SetSearchIDByCourseNameStructure(&stSrhCoInfo, pszNameBuf, uiID);
-
-		//stSrhCoInfo.uiCourseID = uiID;
-		//stSrhCoInfo.strCourseName = pszNameBuf;
-		//// 把结构体插入动态数组中
-		//fOk = g_stAryOfCourseName.InsertTail(stSrhCoInfo);
+		// 把结点插入二叉树
+		fOk = SetSearchIDByCourseNameStructure(pszNameBuf, uiID);
 		if (fOk)
 		{
+			stInfo.uiCourseID = uiID;
+			stInfo.strCourseName = pszNameBuf;
 			// 把结点插入二叉树
 			fOk = g_stCourseInfoTree.InsertNode(stInfo, uiID);
 		}
@@ -715,22 +655,118 @@ void Control::AddCourse()
 
 void Control::AddRecord()
 {
+	UINT uiStudentID = 0;
+	UINT uiCourseID = 0;
+	BOOLEAN fFind = FALSE;
+	pstStuInfo pstStudentInfo = nullptr;
+	pstCourse pstCourseInfo = nullptr;
+	char szBuf[LINEMAX] = { 0 };
 
+	// 获取同学ID值
+	do
+	{
+		cout << "输入学生ID: ";
+		scanf("%u", &uiStudentID);
+		ClearBuffer();
+		// 确定该ID是否存在, ID不存在需要重新输入
+		pstStudentInfo = g_stStudentInfoTree.FindNodeDataPtrByID(uiStudentID);
+		if (!pstStudentInfo)
+		{
+			ClearScreenAndOutput("学生不存在, 再次请输入学生ID");
+		}
+	} while (!pstStudentInfo);
+	// 获取选则课程的ID值
+	do
+	{
+		cout << "输入所选课程ID: ";
+		scanf("%u", &uiCourseID);
+		ClearBuffer();
+		// 确定该ID是否存在, ID存在需要重新输入
+		pstCourseInfo = g_stCourseInfoTree.FindNodeDataPtrByID(uiCourseID);
+		if (!pstCourseInfo)
+		{
+			ClearScreenAndOutput("课程不存在, 再次请输入课程ID");
+		}
+	} while (!pstCourseInfo);
+	
+	// 更新学生信息选课信息
+	// 确保学生没有选过这门课
+	if (!pstStudentInfo->lstOfCourse.ChkStudentChoseCourse(pstCourseInfo->strCourseName.GetString(),
+		pstCourseInfo->strCourseName.GetBufLen()))
+	{
+		// 没选课过这门课则添加记录
+		StudentCourse stStuCourse;
+		UINT uiPoint = 0;
+		cout << "请输入课程成绩(0-100): ";
+		scanf("%u", &uiPoint);
+		ClearBuffer();
+		// 填充课程信息, 并将选课插入
+		stStuCourse.uiPoint = uiPoint;
+		stStuCourse.strCourseName = pstCourseInfo->strCourseName;
+		pstStudentInfo->lstOfCourse.InsertTail(stStuCourse);
+
+		// 在课程树上添加选择了该课程的学生
+		pstCourse pstCo = g_stCourseInfoTree.FindNodeDataPtrByID(uiCourseID);
+		if (!pstCo)
+		{
+			ClearScreenAndOutput("添加课程记录出错! 请在次尝试");
+			return;
+		}
+		StuChosenCourse stChnCo;
+		// 通过ID查询到学生的姓名
+		stChnCo.strName = pstStudentInfo->strName;
+		stChnCo.uiPoint = uiPoint;
+		stChnCo.nStuID = pstStudentInfo->uiID;
+		pstCo->lstOfStu.InsertTail(stChnCo);
+		ClearScreenAndOutput("添加课程成功!");
+	}
+	else
+	{
+		// 已经选过这门课了提示无法再次选择
+		ClearScreenAndOutput("已经选过这门课了,无法再次选择");
+	}
 }
 
 void Control::DelStudent()
 {
 	UINT uiID = 0;
 	BOOLEAN fOk = FALSE;
+	PCSTR pstrStuName = nullptr;
+	stStuInfo stInfo;
+	size_t nHash = 0;
 
 	cout << "输入学生ID: ";
 	scanf("%u", &uiID);
 	ClearBuffer();
-	// 删除该节点
-	fOk = g_stStudentInfoTree.DeleteNode(uiID);
+	// 通过ID寻找该结点是否存在
+	fOk = g_stStudentInfoTree.FindNodeByID(uiID, stInfo);
 	if (fOk)
 	{
-		//fOk = g_stAryOfStudentName.Delete()
+		// 获得指向学生名字的指针
+		pstrStuName = stInfo.strName.GetString();
+		// 计算名字的hash值
+		nHash = NameHashCalc(pstrStuName, stInfo.strName.GetBufLen() - 1);
+		// 通过hash找到g_stSrhStudentNameTree上的结点并删除
+		fOk = g_stSrhStudentNameTree.DeleteNode(nHash);
+		if (fOk)
+		{
+			CArray<char *> CourseNameAry;
+			// 删除学生AVL树上的学生信息
+			fOk = g_stStudentInfoTree.DeleteNodeStu(uiID, CourseNameAry);
+			if (fOk)
+			{
+				BOOLEAN fFind = FALSE;
+				size_t nHash = 0;
+				// 在课程AVL树的学生链表上的结点删除
+				for (size_t nCourseIdx = 0; nCourseIdx < CourseNameAry.GetSize(); ++nCourseIdx)
+				{
+					nHash = NameHashCalc(CourseNameAry[nCourseIdx], strlen(CourseNameAry[nCourseIdx]));
+					// 通过课程名, 删除g_stCourseInfoTree上的学生选课链表结点
+					fOk = g_stCourseInfoTree.DeleteStuChosenCourseFromCourseInfoTree(
+						CourseNameAry[nCourseIdx], nHash, pstrStuName);
+				}
+			}
+		}
 	}
 	if (fOk)
 	{
@@ -748,12 +784,43 @@ void Control::DelCourse()
 {
 	UINT uiID = 0;
 	BOOLEAN fOk = FALSE;
-
+	stCourse stInfo;
+	size_t nHash = 0;
+	PSTR pstrCoName = nullptr;
 	cout << "输入课程ID: ";
 	scanf("%u", &uiID);
 	ClearBuffer();
-	// 删除该节点
-	fOk = g_stCourseInfoTree.DeleteNode(uiID);
+
+	// 通过ID寻找该结点是否存在
+	fOk = g_stCourseInfoTree.FindNodeByID(uiID, stInfo);
+	if (fOk)
+	{
+		// 获得指向学生名字的指针
+		pstrCoName = stInfo.strCourseName.GetString();
+		// 计算名字的hash值
+		nHash = NameHashCalc(pstrCoName, stInfo.strCourseName.GetBufLen() - 1);
+		// 通过hash找到g_stSrhCourseNameTree上的结点并删除
+		fOk = g_stSrhCourseNameTree.DeleteNode(nHash);
+		if (fOk)
+		{
+			CArray<char *> StudentNameAry;
+			// 删除课程AVL树上的结点
+			fOk = g_stCourseInfoTree.DeleteNodeCo(uiID, StudentNameAry);
+			if (fOk)
+			{
+				BOOLEAN fFind = FALSE;
+				size_t nHash = 0;
+				// 在学生AVL树的课程链表上的结点删除
+				for (size_t nStuIdx = 0; nStuIdx < StudentNameAry.GetSize(); ++nStuIdx)
+				{
+					nHash = NameHashCalc(StudentNameAry[nStuIdx], strlen(StudentNameAry[nStuIdx]));
+					// 通过课程名, 删除g_stCourseInfoTree上的学生选课链表结点
+					fOk = g_stStudentInfoTree.DeleteCoursePointRecFromStudentInfoTree(
+						StudentNameAry[nStuIdx], nHash, pstrCoName);
+				}
+			}
+		}
+	}
 	if (fOk)
 	{
 		ClearScreenAndOutput("删除课程成功!");
@@ -762,13 +829,63 @@ void Control::DelCourse()
 	{
 		ClearScreenAndOutput("删除失败, 该课程不存在!");
 	}
-
-	return;
 }
+
 
 void Control::DelRecord()
 {
+	UINT uiStudentID = 0;
+	UINT uiCourseID = 0;
+	pstStuInfo pstStudentInfo = nullptr;
+	pstCourse pstCourseInfo = nullptr;
+	BOOLEAN fOk = FALSE;
 
+	// 获取同学ID值
+	do
+	{
+		cout << "输入学生ID: ";
+		scanf("%u", &uiStudentID);
+		ClearBuffer();
+		// 确定该ID是否存在, ID不存在需要重新输入
+		pstStudentInfo = g_stStudentInfoTree.FindNodeDataPtrByID(uiStudentID);
+		if (!pstStudentInfo)
+		{
+			ClearScreenAndOutput("学生不存在, 再次请输入学生ID");
+		}
+	} while (!pstStudentInfo);
+	// 获取选则课程的ID值
+	do
+	{
+		cout << "输入所选课程ID: ";
+		scanf("%u", &uiCourseID);
+		ClearBuffer();
+		// 确定该ID是否存在, ID存在需要重新输入
+		pstCourseInfo = g_stCourseInfoTree.FindNodeDataPtrByID(uiCourseID);
+		if (!pstCourseInfo)
+		{
+			ClearScreenAndOutput("课程不存在, 再次请输入课程ID");
+		}
+	} while (!pstCourseInfo);
+
+	//
+	// 到此课程ID和学生ID以及相关信息都已经获取
+	// 但此时只能确定这个课程和学生是存在的，至于
+	// 学生有没有选择这门课是不确定的
+	//
+
+	// 如果该选课记录存在则先删除学生信息链表内的选课记录, 如果不存在则返回false
+	fOk = pstStudentInfo->lstOfCourse.DeleteCourseRecordFromStudentTreeCourseList(pstCourseInfo->strCourseName);
+	if (fOk)
+	{
+		// 接着删除课程信息链表内的学生记录
+		fOk = pstCourseInfo->lstOfStu.DeleteStudentRecordFromCourseTreeStudentList(pstStudentInfo->strName);
+		if (fOk)
+		{
+			ClearScreenAndOutput("成功删除选课记录");
+			return;
+		}
+	}
+	ClearScreenAndOutput("错误, 没有该选课记录");
 }
 
 void Control::QueryStuNameByID()
@@ -796,7 +913,6 @@ void Control::QueryStuNameByID()
 
 void Control::QueryIDByStuName()
 {
-	size_t nID = 0;
 	stStuInfo stInfo;
 	BOOLEAN fOk = FALSE;
 	char szNameBuf[LINEMAX] = { 0 };
@@ -818,19 +934,28 @@ void Control::QueryIDByStuName()
 	nHash = NameHashCalc(szNameBuf, strlen(szNameBuf));
 	// 通过HASH值查找对应学生信息
 	fOk = g_stSrhStudentNameTree.FindNodeByID(nHash, stSrhStuName);
-	stSrhStuName.lstStudentName.TraverseList();
 	// 通过学生名查询ID号
-	if (!fOk)
+	if (fOk)
 	{
-		ClearScreenAndOutput("未查到该学生信息, 请确认学生姓名是否有误");
+		CArray<size_t> cIDAry;
+		// 该hash下有多个对应的学生, 通过学生姓名进一步确认
+		fOk = stSrhStuName.lstStudentName.FindStuId(szNameBuf, cIDAry);
+		if (fOk)
+		{
+			char szBuf[LINEMAX] = { 0 };
+
+			cout << "学生信息: " << endl;
+			for (size_t nIdx = 0; nIdx < cIDAry.GetSize(); ++nIdx)
+			{
+				sprintf(szBuf, "学生ID: %u\r\n学生名: %s\r\n", cIDAry[nIdx], szNameBuf);
+				cout << szBuf << endl;
+			}
+			PAUSEANDCLS();
+			return;
+		}
 	}
-	else
-	{
-		stSrhStuName.lstStudentName.FindStuId(szNameBuf, nID);
-		char szBuf[LINEMAX] = { 0 };
-		sprintf(szBuf, "学生信息:\r\n学生ID: %u\r\n学生名: %s\r\n", nID, szNameBuf);
-		ClearScreenAndOutput(szBuf, FALSE);
-	}
+
+	ClearScreenAndOutput("未查到该学生信息, 请确认学生姓名是否有误");
 }
 
 void Control::QueryCoNameByID()
@@ -858,15 +983,92 @@ void Control::QueryCoNameByID()
 
 void Control::QueryIDByCoName()
 {
+	size_t nID = 0;
+	stCourse stInfo;
+	BOOLEAN fOk = FALSE;
+	char szNameBuf[LINEMAX] = { 0 };
+	stSearchIDByCourseName stSrhCoName;
+	char *pszTmpPtr = nullptr;
+	size_t nHash = 0;
 
+	do
+	{
+		cout << "名字: ";
+		pszTmpPtr = GetsEx(szNameBuf, LINEMAX);
+		if (!pszTmpPtr)
+		{
+			ClearScreenAndOutput("输入名字失败, 请再次尝试!");
+			memset(szNameBuf, 0, sizeof(szNameBuf));
+		}
+	} while (!pszTmpPtr);
+	// 计算名称的HASH值
+	nHash = NameHashCalc(szNameBuf, strlen(szNameBuf));
+	// 通过HASH值查找对应课程信息
+	fOk = g_stSrhCourseNameTree.FindNodeByID(nHash, stSrhCoName);
+	// 通过课程名查询ID号
+	if (fOk)
+	{
+		// 该hash下有多个对应的课程, 通过课程名进一步确认
+		fOk = stSrhCoName.lstCourseName.FindCoId(szNameBuf, nID);
+		if (fOk)
+		{
+			char szBuf[LINEMAX] = { 0 };
+			sprintf(szBuf, "课程信息:\r\n课程ID: %u\r\n课程名: %s\r\n", nID, szNameBuf);
+			ClearScreenAndOutput(szBuf, FALSE);
+			return;
+		}
+	}
+
+	ClearScreenAndOutput("未查到该课程信息, 请确认课程名是否有误");
 }
 
 void Control::QueryAllStuAndPointsByID()
 {
+	UINT uiID = 0;
+	stCourse stInfo;
+	BOOLEAN fOk = FALSE;
 
+	cout << "输入课程ID: ";
+	scanf("%u", &uiID);
+	ClearBuffer();
+	// 通过ID号查询AVL树
+	fOk = g_stCourseInfoTree.FindNodeByID(uiID, stInfo);
+	if (!fOk)
+	{
+		ClearScreenAndOutput("未查到该课程信息, 请确认ID号是否有误");
+	}
+	else
+	{
+		char szBuf[LINEMAX] = { 0 };
+		sprintf(szBuf, "课程信息: \r\nID: %u\r\n课程名: %s\r\n", uiID, stInfo.strCourseName);
+		cout << szBuf;
+		printf("学生ID\t学生名\t成绩\r\n");
+		stInfo.lstOfStu.TraverseList();
+		PAUSEANDCLS();
+	}
 }
 
 void Control::QueryCoInfoByID()
 {
+	UINT uiID = 0;
+	stStuInfo stInfo;
+	BOOLEAN fOk = FALSE;
 
+	cout << "输入学生ID: ";
+	scanf("%u", &uiID);
+	ClearBuffer();
+	// 通过ID号查询AVL树
+	fOk = g_stStudentInfoTree.FindNodeByID(uiID, stInfo);
+	if (!fOk)
+	{
+		ClearScreenAndOutput("未查到该学生信息, 请确认ID号是否有误");
+	}
+	else
+	{
+		char szBuf[LINEMAX] = { 0 };
+		sprintf(szBuf, "学生信息: \r\nID: %u\r\n姓名: %s\r\n", uiID, stInfo.strName);
+		cout << szBuf;
+		stInfo.lstOfCourse.TraverseList();
+		PAUSEANDCLS();
+	}
 }

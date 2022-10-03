@@ -18,6 +18,8 @@ Abstract:
 
 --*/
 #include "assert.h"
+#include "CMyString.h"
+#include "CArray.hpp"
 #include <iostream>
 
 using namespace std;
@@ -62,16 +64,169 @@ public:
 	CList& Insert(T val, size_t nIdx); 
 	// 遍历打印双向链表
 	void TraverseList() const;
+	void GetCourseListNamesAry(CArray<char *> &CourseNameAry);
+	void GetCourseListNamesAryStu(CArray<char *> &StuNameAry);
 	// 删除双向链表头部
 	CList& DeleteHead();
 	// 删除双向链表尾部
 	CList& DeleteTail();
 	// 删除指定索引指向的结点
-	CList& Delete(size_t nIdx);           
+	CList& Delete(size_t nIdx);  
+	// 根据课程名删除对应链表结点
+	bool DeleteCourseRecordFromStudentTreeCourseList(CMyString &strCourseName);
+	bool DeleteCourseRecordFromStudentTreeCourseList(const char *pcszCourseName);
+
+	bool DeleteStudentRecordFromCourseTreeStudentList(CMyString &strStudentName);
+	bool DeleteStudentRecordFromCourseTreeStudentList(const char *pcszStudentName);
 	// 清空链表并释放空间
 	void   Clear();
-	// 通过值来寻找对应结点的索引
-	bool FindStuId(const char *pcszName, size_t &rnID)
+	// 获取学生结点中课程链表结点指针
+	Node *FindStudentChoseCourseNode(char *pszCourseName, size_t nBufSize)
+	{
+		Node *pCurNode = nullptr;
+		pStudentCourse pstStuCo = nullptr;
+
+		if (!m_pHeadGuard || !m_pTailGuard)
+		{
+			return(nullptr);
+		}
+		pCurNode = m_pHeadGuard->m_next;
+		while (pCurNode != m_pTailGuard)
+		{
+			pstStuCo = (pStudentCourse)&pCurNode->m_val;
+			if (!_strnicmp(pstStuCo->strCourseName.GetString(), pszCourseName, nBufSize - 1))
+			{
+				return(pCurNode);
+			}
+			pCurNode = pCurNode->m_next;
+		}
+
+		return(nullptr);
+	}
+	// 获取课程结点中学生链表结点指针
+	Node *FindCourseChosenStudentNode(char *pcszStuName, size_t nBufSize)
+	{
+		Node *pCurNode = nullptr;
+		pstStuChosenCourse pstStuChosenCo = nullptr;
+
+		if (!m_pHeadGuard || !m_pTailGuard)
+		{
+			return(nullptr);
+		}
+		pCurNode = m_pHeadGuard->m_next;
+		while (pCurNode != m_pTailGuard)
+		{
+			pstStuChosenCo = (pstStuChosenCourse)&pCurNode->m_val;
+			if (!_strnicmp(pstStuChosenCo->strName.GetString(), pcszStuName, nBufSize - 1))
+			{
+				return(pCurNode);
+			}
+			pCurNode = pCurNode->m_next;
+		}
+
+		return(nullptr);
+	}
+	// 从stSearchIDByCourseName中的stCourseNameAndID链表内通过课程名搜索对应ID
+	unsigned int FindCourseIDByCourseNameInList(const char *pcszCourseName, bool &fOk)
+	{
+		pstCourseNameAndID pstCoNameID = nullptr;
+		Node *pCurNode = nullptr;
+		pStudentCourse pstStuCo = nullptr;
+		fOk = false;
+
+		if (!m_pHeadGuard || !m_pTailGuard || !pcszCourseName)
+		{
+			return(0);
+		}
+		pCurNode = m_pHeadGuard->m_next;
+		while (pCurNode != m_pTailGuard)
+		{
+			pstCoNameID = (pstCourseNameAndID)&pCurNode->m_val;
+			if (!_stricmp(pstCoNameID->strCourseName.GetString(), pcszCourseName))
+			{
+				fOk = true;
+				return(pstCoNameID->uiCourseID);
+			}
+			pCurNode = pCurNode->m_next;
+		}
+
+		return(0);
+	}
+	
+	// 获取学生选的链表结点指针
+	//Node *FindStudentChoseCourseNode(char *pcszCoName, size_t nBufSize)
+	//{
+	//	Node *pCurNode = nullptr;
+	//	pStudentCourse pstStuCo = nullptr;
+
+	//	if (!m_pHeadGuard || !m_pTailGuard)
+	//	{
+	//		return(nullptr);
+	//	}
+	//	pCurNode = m_pHeadGuard->m_next;
+	//	while (pCurNode != m_pTailGuard)
+	//	{
+	//		pstStuCo = (pStudentCourse)&pCurNode->m_val;
+	//		if (!_strnicmp(pstStuCo->strCourseName.GetString(), pcszCoName, nBufSize - 1))
+	//		{
+	//			return(pCurNode);
+	//		}
+	//		pCurNode = pCurNode->m_next;
+	//	}
+
+	//	return(nullptr);
+	//}
+	// 确认学生是否选过该课程
+	bool ChkStudentChoseCourse(char *pcszCoName, size_t nBufSize)
+	{
+		Node *pCurNode = nullptr;
+		pStudentCourse pstStuCo = nullptr;
+
+		if (!m_pHeadGuard || !m_pTailGuard)
+		{
+			return(false);
+		}
+		pCurNode = m_pHeadGuard->m_next;
+		while (pCurNode != m_pTailGuard)
+		{
+			pstStuCo = (pStudentCourse)&pCurNode->m_val;
+			if (!_strnicmp(pstStuCo->strCourseName.GetString(), pcszCoName, nBufSize - 1))
+			{
+				return(true);
+			}
+			pCurNode = pCurNode->m_next;
+		}
+
+		return(false);
+	}
+
+	// 通过课程名来查找其ID
+	bool FindCoId(const char *pcszName, size_t &rnID)
+	{
+		Node *pCurNode = nullptr;
+		pstCourseNameAndID pstCoNameAndId = nullptr;
+
+		if (!m_pHeadGuard || !m_pTailGuard)
+		{
+			return(false);
+		}
+		pCurNode = m_pHeadGuard->m_next;
+		while (pCurNode != m_pTailGuard)
+		{
+			pstCoNameAndId = (pstCourseNameAndID)&pCurNode->m_val;
+			if (!strcmp(pcszName, pstCoNameAndId->strCourseName.GetString()))
+			{
+				rnID = pstCoNameAndId->uiCourseID;
+				return(true);
+			}
+			pCurNode = pCurNode->m_next;
+		}
+		cout << endl;
+
+		return(false);
+	}
+	// 通过学生的姓名来查找其ID
+	bool FindStuId(const char *pcszName, CArray<size_t> &cAry)
 	{
 		Node *pCurNode = nullptr;
 		pstStudentNameAndID pstStuNameAndId = nullptr;
@@ -86,12 +241,15 @@ public:
 			pstStuNameAndId = (pstStudentNameAndID)&pCurNode->m_val;
 			if (!strcmp(pcszName, pstStuNameAndId->strStudentName.GetString()))
 			{
-				rnID = pstStuNameAndId->uiStudentID;
-				return(true);
+				cAry.InsertHead(pstStuNameAndId->uiStudentID);
 			}
 			pCurNode = pCurNode->m_next;
 		}
-		cout << endl;
+		// 如果数组内有内容则代表查找成功
+		if (cAry.GetSize())
+		{
+			return(true);
+		}
 
 		return(false);
 	}
@@ -130,6 +288,149 @@ private:
 	Node* m_pTailGuard = nullptr; // 尾哨兵
 	size_t m_nSize = 0;           // 个数
 };
+
+template <typename T>
+bool CList<T>::DeleteCourseRecordFromStudentTreeCourseList(const char *pcszCourseName)
+{
+	Node *pCurNode = nullptr;
+	Node *pPreNode = nullptr;
+	Node *pNextNode = nullptr;
+	bool fOk = false;
+	
+	// 通过课程名, 找到链表结点
+	pCurNode = FindStudentChoseCourseNode((char *)pcszCourseName,
+		strlen(pcszCourseName));
+	if (!pCurNode)
+	{
+		return(false);
+	}
+	// 找到了该结点执行删除操作
+	if (pCurNode)
+	{
+		pPreNode = pCurNode->m_prev;
+		pNextNode = pCurNode->m_next;
+
+		pPreNode->m_next = pNextNode;
+		pNextNode->m_prev = pPreNode;
+
+		if (pCurNode)
+		{
+			delete pCurNode;
+			pCurNode = nullptr;
+		}
+		--m_nSize;
+	}
+
+	return(true);
+}
+
+template <typename T>
+bool CList<T>::DeleteStudentRecordFromCourseTreeStudentList(const char *pcszStudentName)
+{
+	Node *pCurNode = nullptr;
+	Node *pPreNode = nullptr;
+	Node *pNextNode = nullptr;
+	stCourse stCo;
+	bool fOk = false;
+
+	// 通过学生名, 找到链表结点
+	pCurNode = FindCourseChosenStudentNode((char *)pcszStudentName,
+		strlen(pcszStudentName));
+	if (!pCurNode)
+	{
+		return(false);
+	}
+	// 找到了该结点执行删除操作
+	if (pCurNode)
+	{
+		pPreNode = pCurNode->m_prev;
+		pNextNode = pCurNode->m_next;
+
+		pPreNode->m_next = pNextNode;
+		pNextNode->m_prev = pPreNode;
+
+		if (pCurNode)
+		{
+			delete pCurNode;
+			pCurNode = nullptr;
+		}
+		--m_nSize;
+	}
+
+	return(true);
+}
+
+template <typename T>
+bool CList<T>::DeleteStudentRecordFromCourseTreeStudentList(CMyString &strStudentName)
+{
+	Node *pCurNode = nullptr;
+	Node *pPreNode = nullptr;
+	Node *pNextNode = nullptr;
+	stCourse stCo;
+	bool fOk = false;
+
+	// 通过学生名, 找到链表结点
+	pCurNode = FindCourseChosenStudentNode(strStudentName.GetString(), 
+		strStudentName.GetBufLen());
+	if (!pCurNode)
+	{
+		return(false);
+	}
+	// 找到了该结点执行删除操作
+	if (pCurNode)
+	{
+		pPreNode = pCurNode->m_prev;
+		pNextNode = pCurNode->m_next;
+
+		pPreNode->m_next = pNextNode;
+		pNextNode->m_prev = pPreNode;
+
+		if (pCurNode)
+		{
+			delete pCurNode;
+			pCurNode = nullptr;
+		}
+		--m_nSize;
+	}
+
+	return(true);
+}
+
+template <typename T>
+bool CList<T>::DeleteCourseRecordFromStudentTreeCourseList(CMyString &strCourseName)
+{
+	Node *pCurNode = nullptr;
+	Node *pPreNode = nullptr;
+	Node *pNextNode = nullptr;
+	StudentCourse stStuCo;
+	bool fOk = false;
+
+	// 找到课程名对应的链表结点
+	pCurNode = FindStudentChoseCourseNode(strCourseName.GetString(),
+		strCourseName.GetBufLen());
+	if (!pCurNode)
+	{
+		return(false);
+	}
+	// 找到了该结点执行删除操作
+	if (pCurNode)
+	{
+		pPreNode = pCurNode->m_prev;
+		pNextNode = pCurNode->m_next;
+
+		pPreNode->m_next = pNextNode;
+		pNextNode->m_prev = pPreNode;
+
+		if (pCurNode)
+		{
+			delete pCurNode;
+			pCurNode = nullptr;
+		}
+		--m_nSize;
+	}
+
+	return(true);
+}
 
 template <typename T>
 CList<T>::CList() :
@@ -272,6 +573,46 @@ CList<T>& CList<T>::Insert(T val, size_t nIdx)
 	} while (false);
 
 	return(*this);
+}
+
+
+template <typename T>
+void CList<T>::GetCourseListNamesAryStu(CArray<char *> &StuNameAry)
+{
+	Node *pCurNode = nullptr;
+	pstStuChosenCourse pStuChosenCo = nullptr;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return;
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		pStuChosenCo = (pstStuChosenCourse)&pCurNode->m_val;
+		StuNameAry.InsertHead(pStuChosenCo->strName.GetString());
+		pCurNode = pCurNode->m_next;
+	}
+}
+
+
+template <typename T>
+void CList<T>::GetCourseListNamesAry(CArray<char *> &CourseNameAry)
+{
+	Node *pCurNode = nullptr;
+	pStudentCourse pStuCo = nullptr;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return;
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		pStuCo = (pStudentCourse)&pCurNode->m_val;
+		CourseNameAry.InsertHead(pStuCo->strCourseName.GetString());
+		pCurNode = pCurNode->m_next;
+	}
 }
 
 template <typename T>

@@ -69,6 +69,14 @@ private:
 	void GiveValue(const CArray &ary);
 
 	bool IncBufSize(size_t nIncSize = INCREMENT);
+public:
+	void Print() const
+	{
+		for (size_t nIdx = 0; nIdx < m_nSize; ++nIdx)
+		{
+			cout << m_pBuf[nIdx] << endl;
+		}
+	}
 private:
 	T*   m_pBuf = nullptr;					// 元素缓冲区
 	size_t m_nSize = 0;						// 元素个数    内容content
@@ -212,7 +220,7 @@ bool CArray<T>::Insert(const T &val, size_t nIdx)
 	{
 		nIdx = m_nSize;
 	}
-	for (size_t nIndex = m_nSize; nIndex > nIdx; ++nIndex)
+	for (size_t nIndex = m_nSize; nIndex > nIdx; --nIndex)
 	{
 		m_pBuf[nIndex] = m_pBuf[nIndex - 1];
 	}

@@ -39,3 +39,9 @@ PSTR GetsEx(PSTR pBuf, size_t nBufSize, FILE *pFile /*= stdin*/)
 	
 	return(pszBufPtr);
 }
+
+
+void ClearBuffer()
+{
+	while (getchar() != '\n');
+}

@@ -46,41 +46,25 @@ ostream &operator<<(ostream &os, const _stStudentNameAndID &stInfo)
 	return(os);
 }
 
-stSearchIDByStudentName *BinSrhStuName(pstSearchIDByStudentName pstSrhStuInfo, 
-	size_t nLen, size_t nObjHash)
+ostream &operator<<(ostream &os, const tagStudentCourse &stInfo)
 {
-	size_t nFirst = 0;
-	size_t nLast = nLen - 1;
-	size_t nMid = 0;
-	size_t nAryHash = 0;
+	cout << "¿Î³ÌÃû: " << stInfo.strCourseName << endl;
+	cout << "³É¼¨: " << stInfo.uiPoint << endl;
 
-	if (!nObjHash || !nLen || !pstSrhStuInfo)
-	{
-		return(nullptr);
-	}
-	while (nFirst < nLast)
-	{
-		nMid = nFirst + (nLast - nFirst) / 2;
-		nAryHash = pstSrhStuInfo[nMid].nNameHash;
-		if (nAryHash < nObjHash)
-		{
-			nFirst = nMid + 1;
-		}
-		else if (nAryHash > nObjHash)
-		{
-			nLast = nMid - 1;
-		}
-		else
-		{
-			return(&pstSrhStuInfo[nMid]);
-		}
-	}
-	
-	return(nullptr);
+	return(os);
 }
 
-void ClearBuffer()
+ostream &operator<<(ostream &os, const tagStuChosenCourse &stInfo)
 {
-	while (getchar() != '\n');
-}
+	if (stInfo.nStuID < 1000)
+	{
+		printf("%03u\t%s\t", stInfo.nStuID, stInfo.strName);
+	}
+	else
+	{
+		printf("%u\t%s\t", stInfo.nStuID, stInfo.strName);
+	}
+	cout << stInfo.uiPoint << endl;
 
+	return(os);
+}
