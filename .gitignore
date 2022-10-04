@@ -1,6 +1,0 @@
-# 需要省略的目录
-.vs
-bin/Debug
-bin/Release
-# 需要省略的文件
-*.exe
