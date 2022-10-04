@@ -9,6 +9,7 @@ CAVLTree<stSearchIDByCourseName> g_stSrhCourseNameTree;
 
 CAVLTree<stSearchIDByStudentName> g_stSrhStudentNameTree;
 
+
 ostream &operator<<(ostream &os, const tagStudentInfo &stInfo)
 {
 	os << "学生名: " << stInfo.strName << endl;
@@ -18,6 +19,7 @@ ostream &operator<<(ostream &os, const tagStudentInfo &stInfo)
 
 	return(os);
 }
+
 
 ostream &operator<<(ostream &os, const tagCourse &stInfo)
 {
@@ -29,30 +31,40 @@ ostream &operator<<(ostream &os, const tagCourse &stInfo)
 	return(os);
 }
 
+
 ostream &operator<<(ostream &os, const tagSearchIDByStudentName &stInfo)
 {
 	os << "hash: " << stInfo.nNameHash << endl;
 	stInfo.lstStudentName.TraverseList();
+
 	os << endl;
 
 	return(os);
 }
+
 
 ostream &operator<<(ostream &os, const _stStudentNameAndID &stInfo)
 {
 	cout << "学生ID: " << stInfo.uiStudentID << endl;
 	cout << "学生名: " << stInfo.strStudentName << endl;
 
+	cout << endl;
+
 	return(os);
 }
+
 
 ostream &operator<<(ostream &os, const tagStudentCourse &stInfo)
 {
+	cout << "课程ID: " << stInfo.nCourseID << endl;
 	cout << "课程名: " << stInfo.strCourseName << endl;
 	cout << "成绩: " << stInfo.uiPoint << endl;
 
+	cout << endl;
+
 	return(os);
 }
+
 
 ostream &operator<<(ostream &os, const tagStuChosenCourse &stInfo)
 {

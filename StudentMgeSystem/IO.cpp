@@ -3,15 +3,13 @@
 
 IO::IO(const char *pcszFilePathName, eIOType eMode /*= READONLY*/) : 
 	m_strFileName(pcszFilePathName), m_eMode(eMode)
-{
+{ }
 
-}
 
 IO::IO(const CMyString &strFileName, eIOType eMode /*= READONLY*/) :
 	m_strFileName(strFileName), m_eMode(eMode)
-{
+{ }
 
-}
 
 ULONGLONG IO::IOGetFileSize()
 {
@@ -46,6 +44,7 @@ ULONGLONG IO::IOGetFileSize()
 
 	return(ullFileSize);
 }
+
 
 char ** IO::GetLineFromFile(size_t &rnSizeOfStringAry)
 {
@@ -138,6 +137,7 @@ char ** IO::GetLineFromFile(size_t &rnSizeOfStringAry)
 	return(ppstrLineAry);
 }
 
+
 BOOLEAN IO::FileExists(const char *pcszFileName)
 {
 	FILE *pFile = nullptr;
@@ -157,6 +157,7 @@ BOOLEAN IO::FileExists(const char *pcszFileName)
 
 	return(TRUE);
 }
+
 
 void IO::Release2DiAry(PPSTR ppStrAry, size_t nSize)
 {

@@ -1,35 +1,17 @@
+// 双向循环链表实现类
 #pragma once
-/*++
-
-Copyright (c) Ki0pler. All rights reserved.
-
-You may only use this code if you agree to the terms of the GNU General Public License.
-If you do not agree to the terms, do not use the code.
-Any question about the code. Contact me with the email ki0pler@outlook.com
-
-
-Module Name:
-
-	CList.pp
-
-Abstract:
-
-   This module provides the implementation of doubly circular list implementation.
-
---*/
-#include "assert.h"
+#include <iostream>
 #include "CMyString.h"
 #include "CArray.hpp"
-#include <iostream>
 
 using namespace std;
-
-
 
 template <typename T>
 class CList
 {
 public:
+	static const size_t INVALID_IDX = -1;
+	// CList的结点结构
 	struct Node
 	{
 		Node(T val) :m_val(val) {}
@@ -40,7 +22,6 @@ public:
 		Node* m_prev = nullptr; //前驱结点的地址
 		Node* m_next = nullptr; //后继结点的地址
 	};
-	static const size_t INVALID_IDX = -1;
 public:
 	// 默认构造函数
 	CList();
@@ -62,24 +43,79 @@ public:
 	CList& InsertTail(T val);
 	// 在指定索引插入值
 	CList& Insert(T val, size_t nIdx); 
+	// 清空链表并释放空间
+	void   Clear();
+	// 获取链表元素数量
+	size_t Size() const;
+	// 判断链表是否为空
+	bool   IsEmpty() const;
+	// 获取链表结点数量
+	size_t GetSize() const;
 	// 遍历打印双向链表
 	void TraverseList() const;
+	// 将课程结点中的学生信息链表的学生们保存在动态数组内
 	void GetCourseListNamesAry(CArray<char *> &CourseNameAry);
-	void GetCourseListNamesAryStu(CArray<char *> &StuNameAry);
+	// 将学生结点中的课程链表的课程保存
+	void GetStudentListNamesAry(size_t *&prStuID, size_t &nBufSize);
+
+	/*
+		g_stSrhCourseNameTree和g_stSrhStudentNameTree存储格式
+		|  nHash  |_________ ____________
+		|   nID   | nStrLen | string ... |
+		|   nID   | nStrLen | string ... |
+		|             ...                |_________
+		|   nID   | nStrLen | string ... | ENDMARK |
+	*/
+	// 获取SrhCourse中链表内容总大小
+	unsigned int GetCourseListSize() const;
+	// 获取SrhStudent中链表内容总大小
+	unsigned int GetStudentListSize() const;
+	// 将链表数据按照存储格式保存到pucBuf中并返回写入的数据长度
+	unsigned int SetCourseListDataToBuf(unsigned char *pucBuf);
+	// 将链表数据按照存储格式保存到pucBuf中并返回写入的数据长度
+	unsigned int SetStudentListDataToBuf(unsigned char *pucBuf);
+	/*
+		g_stCourseInfoTree和g_stStudentInfoTree存储格式
+		 _________________________________________________
+		| CourseID | StrLen |        ... CoStr ...        |
+		|   StuID  |  Point | StuStrLen |... StuStrName...|
+		|   StuID  |  Point | StuStrLen |... StuStrName...|
+		|                        ...                      |
+		|   StuID  |  Point | StuStrLen |... StuStrName...|_________
+		|   StuID  |  Point | StuStrLen |... StuStrName...| ENDMARK |
+	*/
+	// 获取Course中链表内容总大小
+	unsigned int GetCourseListSizeX() const;
+	// 获取Student中链表内容总大小
+	unsigned int GetStudentListSizeX() const;
+	// 将链表数据按照存储格式保存到pucBuf中并返回写入的数据长度
+	unsigned int SetCourseListDataToBufX(unsigned char *pucBuf);
+	// 将链表数据按照存储格式保存到pucBuf中并返回写入的数据长度
+	unsigned int SetStudentListDataToBufX(unsigned char *pucBuf);
+	
 	// 删除双向链表头部
 	CList& DeleteHead();
 	// 删除双向链表尾部
 	CList& DeleteTail();
 	// 删除指定索引指向的结点
 	CList& Delete(size_t nIdx);  
+	// 通过ID删除对应结点
+	bool DeleteByID(size_t nID, bool fCourse = FALSE);
 	// 根据课程名删除对应链表结点
 	bool DeleteCourseRecordFromStudentTreeCourseList(CMyString &strCourseName);
 	bool DeleteCourseRecordFromStudentTreeCourseList(const char *pcszCourseName);
-
 	bool DeleteStudentRecordFromCourseTreeStudentList(CMyString &strStudentName);
 	bool DeleteStudentRecordFromCourseTreeStudentList(const char *pcszStudentName);
-	// 清空链表并释放空间
-	void   Clear();
+	
+	// 从stSearchIDByCourseName中的stCourseNameAndID链表内通过课程名搜索对应ID
+	unsigned int FindCourseIDByCourseNameInList(const char *pcszCourseName, bool &fOk);
+	// 确认学生是否选过该课程
+	bool ChkStudentChoseCourse(char *pcszCoName, size_t nBufSize);
+	// 通过课程名来查找其ID
+	bool FindCoId(const char *pcszName, size_t &rnID);
+	// 通过学生的姓名来查找其ID
+	bool FindStuId(const char *pcszName, CArray<size_t> &cAry);
+
 	// 获取学生结点中课程链表结点指针
 	Node *FindStudentChoseCourseNode(char *pszCourseName, size_t nBufSize)
 	{
@@ -126,138 +162,6 @@ public:
 
 		return(nullptr);
 	}
-	// 从stSearchIDByCourseName中的stCourseNameAndID链表内通过课程名搜索对应ID
-	unsigned int FindCourseIDByCourseNameInList(const char *pcszCourseName, bool &fOk)
-	{
-		pstCourseNameAndID pstCoNameID = nullptr;
-		Node *pCurNode = nullptr;
-		pStudentCourse pstStuCo = nullptr;
-		fOk = false;
-
-		if (!m_pHeadGuard || !m_pTailGuard || !pcszCourseName)
-		{
-			return(0);
-		}
-		pCurNode = m_pHeadGuard->m_next;
-		while (pCurNode != m_pTailGuard)
-		{
-			pstCoNameID = (pstCourseNameAndID)&pCurNode->m_val;
-			if (!_stricmp(pstCoNameID->strCourseName.GetString(), pcszCourseName))
-			{
-				fOk = true;
-				return(pstCoNameID->uiCourseID);
-			}
-			pCurNode = pCurNode->m_next;
-		}
-
-		return(0);
-	}
-	
-	// 获取学生选的链表结点指针
-	//Node *FindStudentChoseCourseNode(char *pcszCoName, size_t nBufSize)
-	//{
-	//	Node *pCurNode = nullptr;
-	//	pStudentCourse pstStuCo = nullptr;
-
-	//	if (!m_pHeadGuard || !m_pTailGuard)
-	//	{
-	//		return(nullptr);
-	//	}
-	//	pCurNode = m_pHeadGuard->m_next;
-	//	while (pCurNode != m_pTailGuard)
-	//	{
-	//		pstStuCo = (pStudentCourse)&pCurNode->m_val;
-	//		if (!_strnicmp(pstStuCo->strCourseName.GetString(), pcszCoName, nBufSize - 1))
-	//		{
-	//			return(pCurNode);
-	//		}
-	//		pCurNode = pCurNode->m_next;
-	//	}
-
-	//	return(nullptr);
-	//}
-	// 确认学生是否选过该课程
-	bool ChkStudentChoseCourse(char *pcszCoName, size_t nBufSize)
-	{
-		Node *pCurNode = nullptr;
-		pStudentCourse pstStuCo = nullptr;
-
-		if (!m_pHeadGuard || !m_pTailGuard)
-		{
-			return(false);
-		}
-		pCurNode = m_pHeadGuard->m_next;
-		while (pCurNode != m_pTailGuard)
-		{
-			pstStuCo = (pStudentCourse)&pCurNode->m_val;
-			if (!_strnicmp(pstStuCo->strCourseName.GetString(), pcszCoName, nBufSize - 1))
-			{
-				return(true);
-			}
-			pCurNode = pCurNode->m_next;
-		}
-
-		return(false);
-	}
-
-	// 通过课程名来查找其ID
-	bool FindCoId(const char *pcszName, size_t &rnID)
-	{
-		Node *pCurNode = nullptr;
-		pstCourseNameAndID pstCoNameAndId = nullptr;
-
-		if (!m_pHeadGuard || !m_pTailGuard)
-		{
-			return(false);
-		}
-		pCurNode = m_pHeadGuard->m_next;
-		while (pCurNode != m_pTailGuard)
-		{
-			pstCoNameAndId = (pstCourseNameAndID)&pCurNode->m_val;
-			if (!strcmp(pcszName, pstCoNameAndId->strCourseName.GetString()))
-			{
-				rnID = pstCoNameAndId->uiCourseID;
-				return(true);
-			}
-			pCurNode = pCurNode->m_next;
-		}
-		cout << endl;
-
-		return(false);
-	}
-	// 通过学生的姓名来查找其ID
-	bool FindStuId(const char *pcszName, CArray<size_t> &cAry)
-	{
-		Node *pCurNode = nullptr;
-		pstStudentNameAndID pstStuNameAndId = nullptr;
-
-		if (!m_pHeadGuard || !m_pTailGuard)
-		{
-			return(false);
-		}
-		pCurNode = m_pHeadGuard->m_next;
-		while (pCurNode != m_pTailGuard)
-		{
-			pstStuNameAndId = (pstStudentNameAndID)&pCurNode->m_val;
-			if (!strcmp(pcszName, pstStuNameAndId->strStudentName.GetString()))
-			{
-				cAry.InsertHead(pstStuNameAndId->uiStudentID);
-			}
-			pCurNode = pCurNode->m_next;
-		}
-		// 如果数组内有内容则代表查找成功
-		if (cAry.GetSize())
-		{
-			return(true);
-		}
-
-		return(false);
-	}
-	// 获取链表元素数量
-	size_t Size() const;
-	// 判断链表是否为空
-	bool   IsEmpty() const;
-
 private:
 	// 通过索引获取执行结点的指针
 	Node* IdxToNode(size_t nIdx)
@@ -288,6 +192,421 @@ private:
 	Node* m_pTailGuard = nullptr; // 尾哨兵
 	size_t m_nSize = 0;           // 个数
 };
+
+template <typename T>
+bool CList<T>::DeleteByID(size_t nID, bool fCourse/* = FALSE*/)
+{
+	Node *pCurNode = nullptr;
+	Node *pPreNode = nullptr;
+	Node *pNextNode = nullptr;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return(false);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		if (fCourse)
+		{
+			pstCourseNameAndID pstCoNameID = (pstCourseNameAndID)&pCurNode->m_val;
+			if (pstCoNameID->uiCourseID == nID)
+			{
+				break;
+			}
+		}
+		else
+		{
+			pstStudentNameAndID pstStuNameID = (pstStudentNameAndID)&pCurNode->m_val;
+			if (pstStuNameID->uiStudentID == nID)
+			{
+				break;
+			}
+		}
+		pCurNode = pCurNode->m_next;
+	}
+
+	if (pCurNode)
+	{
+		pPreNode = pCurNode->m_prev;
+		pNextNode = pCurNode->m_next;
+
+		pPreNode->m_next = pNextNode;
+		pNextNode->m_prev = pPreNode;
+
+		if (pCurNode)
+		{
+			delete pCurNode;
+			pCurNode = nullptr;
+		}
+		--m_nSize;
+	}
+
+	return(true);
+}
+
+template <typename T>
+unsigned int CList<T>::GetStudentListSizeX() const
+{
+	unsigned int uiListTotalSize = 0;
+	Node *pCurNode = nullptr;
+	StudentCourse stStuCo;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return(0);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		stStuCo = (StudentCourse)pCurNode->m_val;
+		// 这4个字节是存储到文件时用到的字符串长度
+		uiListTotalSize += sizeof(stStuCo.nCourseID) + sizeof(stStuCo.uiPoint)
+			+ (stStuCo.strCourseName.GetBufLen() - 1) + 4;
+		pCurNode = pCurNode->m_next;
+	}
+
+	return(uiListTotalSize);
+}
+
+
+template <typename T>
+unsigned int CList<T>::SetStudentListDataToBufX(unsigned char *pucBuf)
+{
+	Node *pCurNode = nullptr;
+	StudentCourse stStuCo;
+	unsigned int uiSaveSize = 0;
+	size_t nStrLen = 0;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return(0);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		stStuCo = (StudentCourse)pCurNode->m_val;
+		// 这4个字节是存储到文件时用到的字符串长度
+		// 保存课程ID
+		*(size_t *)pucBuf = stStuCo.nCourseID;
+		uiSaveSize += 4;
+		pucBuf += 4;
+		// 保存课程分数
+		*(size_t *)pucBuf = stStuCo.uiPoint;
+		uiSaveSize += 4;
+		pucBuf += 4;
+		// 保存修课程名的长度
+		nStrLen = stStuCo.strCourseName.GetBufLen() - 1;
+		*(size_t *)pucBuf = nStrLen;
+		uiSaveSize += 4;
+		pucBuf += 4;
+		// 保存字符串
+		memcpy(pucBuf, stStuCo.strCourseName.GetString(), nStrLen);
+		uiSaveSize += nStrLen;
+		pucBuf += nStrLen;
+		pCurNode = pCurNode->m_next;
+	}
+
+	return(uiSaveSize);
+}
+
+
+template <typename T>
+unsigned int CList<T>::GetCourseListSizeX() const
+{
+	unsigned int uiListTotalSize = 0;
+	Node *pCurNode = nullptr;
+	StuChosenCourse stChosenCo;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return(0);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		stChosenCo = (StuChosenCourse)pCurNode->m_val;
+		// 这4个字节是存储到文件时用到的字符串长度
+		uiListTotalSize += sizeof(stChosenCo.nStuID) + sizeof(stChosenCo.uiPoint)
+			+ (stChosenCo.strName.GetBufLen() - 1) + 4;
+		pCurNode = pCurNode->m_next;
+	}
+
+	return(uiListTotalSize);
+}
+
+
+template <typename T>
+unsigned int CList<T>::SetCourseListDataToBufX(unsigned char *pucBuf)
+{
+	Node *pCurNode = nullptr;
+	StuChosenCourse stChosenCo;
+	unsigned int uiSaveSize = 0;
+	size_t nStrLen = 0;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return(0);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		stChosenCo = (StuChosenCourse)pCurNode->m_val;
+		// 这4个字节是存储到文件时用到的字符串长度
+		// 保存学生ID
+		*(size_t *)pucBuf = stChosenCo.nStuID;
+		uiSaveSize += 4;
+		pucBuf += 4;
+		// 保存学生的课程分数
+		*(size_t *)pucBuf = stChosenCo.uiPoint;
+		uiSaveSize += 4;
+		pucBuf += 4;
+		// 保存学生选修课程名的长度
+		nStrLen = stChosenCo.strName.GetBufLen() - 1;
+		*(size_t *)pucBuf = nStrLen;
+		uiSaveSize += 4;
+		pucBuf += 4;
+		// 保存字符串
+		memcpy(pucBuf, stChosenCo.strName.GetString(), nStrLen);
+		uiSaveSize += nStrLen;
+		pucBuf += nStrLen;
+		pCurNode = pCurNode->m_next;
+	}
+
+	return(uiSaveSize);
+}
+
+
+template <typename T>
+unsigned int CList<T>::SetStudentListDataToBuf(unsigned char *pucBuf)
+{
+	Node *pCurNode = nullptr;
+	stStudentNameAndID stStuNameID;
+	unsigned int uiSaveSize = 0;
+	size_t nStrLen = 0;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return(0);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		stStuNameID = (stStudentNameAndID)pCurNode->m_val;
+		// 这4个字节是存储到文件时用到的字符串长度
+		// 保存ID
+		*(size_t *)pucBuf = stStuNameID.uiStudentID;
+		uiSaveSize += 4;
+		pucBuf += 4;
+		// 保存字符串长度
+		nStrLen = stStuNameID.strStudentName.GetBufLen() - 1;
+		*(size_t *)pucBuf = nStrLen;
+		uiSaveSize += 4;
+		pucBuf += 4;
+		// 保存字符串
+		memcpy(pucBuf, stStuNameID.strStudentName.GetString(), nStrLen);
+		uiSaveSize += nStrLen;
+		pucBuf += nStrLen;
+		pCurNode = pCurNode->m_next;
+	}
+
+	return(uiSaveSize);
+}
+
+
+template <typename T>
+unsigned int CList<T>::GetStudentListSize() const
+{
+	Node *pCurNode = nullptr;
+	stStudentNameAndID stStuNameID;
+	unsigned int uiListNodeSize = 0;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return(0);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		stStuNameID = (stStudentNameAndID)pCurNode->m_val;
+		// 这4个字节是存储到文件时用到的字符串长度
+		uiListNodeSize += sizeof(stStuNameID.uiStudentID) +
+			(stStuNameID.strStudentName.GetBufLen() - 1) + 4;
+		pCurNode = pCurNode->m_next;
+	}
+
+	return(uiListNodeSize);
+}
+
+
+template <typename T>
+unsigned int CList<T>::SetCourseListDataToBuf(unsigned char *pucBuf)
+{
+	Node *pCurNode = nullptr;
+	stCourseNameAndID stCoNameID;
+	unsigned int uiSaveSize = 0;
+	size_t nStrLen = 0;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return(0);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		stCoNameID = (stCourseNameAndID)pCurNode->m_val;
+		// 这4个字节是存储到文件时用到的字符串长度
+		// 保存ID
+		*(size_t *)pucBuf = stCoNameID.uiCourseID;
+		uiSaveSize += 4;
+		pucBuf += 4;
+		// 保存字符串长度
+		nStrLen = stCoNameID.strCourseName.GetBufLen() - 1;
+		*(size_t *)pucBuf = nStrLen;
+		uiSaveSize += 4;
+		pucBuf += 4;
+		// 保存字符串
+		memcpy(pucBuf, stCoNameID.strCourseName.GetString(), nStrLen);
+		uiSaveSize += nStrLen;
+		pucBuf += nStrLen;
+		pCurNode = pCurNode->m_next;
+	}
+
+	return(uiSaveSize);
+}
+
+template <typename T>
+unsigned int CList<T>::GetCourseListSize() const
+{
+	Node *pCurNode = nullptr;
+	stCourseNameAndID stCoNameID;
+	unsigned int uiListNodeSize = 0;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return(0);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		stCoNameID = (stCourseNameAndID)pCurNode->m_val;
+		// 这4个字节是存储到文件时用到的字符串长度
+		uiListNodeSize += sizeof(stCoNameID.uiCourseID) + 
+			(stCoNameID.strCourseName.GetBufLen() - 1) + 4;
+		pCurNode = pCurNode->m_next;
+	}
+
+	return(uiListNodeSize);
+}
+
+template <typename T>
+bool CList<T>::FindCoId(const char *pcszName, size_t &rnID)
+{
+	Node *pCurNode = nullptr;
+	pstCourseNameAndID pstCoNameAndId = nullptr;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return(false);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		pstCoNameAndId = (pstCourseNameAndID)&pCurNode->m_val;
+		if (!strcmp(pcszName, pstCoNameAndId->strCourseName.GetString()))
+		{
+			rnID = pstCoNameAndId->uiCourseID;
+			return(true);
+		}
+		pCurNode = pCurNode->m_next;
+	}
+	cout << endl;
+
+	return(false);
+}
+
+
+template <typename T>
+bool CList<T>::ChkStudentChoseCourse(char *pcszCoName, size_t nBufSize)
+{
+	Node *pCurNode = nullptr;
+	pStudentCourse pstStuCo = nullptr;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return(false);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		pstStuCo = (pStudentCourse)&pCurNode->m_val;
+		if (!_strnicmp(pstStuCo->strCourseName.GetString(), pcszCoName, nBufSize - 1))
+		{
+			return(true);
+		}
+		pCurNode = pCurNode->m_next;
+	}
+
+	return(false);
+}
+
+
+template <typename T>
+unsigned int CList<T>::FindCourseIDByCourseNameInList(const char *pcszCourseName, bool &fOk)
+{
+	pstCourseNameAndID pstCoNameID = nullptr;
+	Node *pCurNode = nullptr;
+	fOk = false;
+
+	if (!m_pHeadGuard || !m_pTailGuard || !pcszCourseName)
+	{
+		return(0);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		pstCoNameID = (pstCourseNameAndID)&pCurNode->m_val;
+		if (!_stricmp(pstCoNameID->strCourseName.GetString(), pcszCourseName))
+		{
+			fOk = true;
+			return(pstCoNameID->uiCourseID);
+		}
+		pCurNode = pCurNode->m_next;
+	}
+
+	return(0);
+}
+
+
+template <typename T>
+bool CList<T>::FindStuId(const char *pcszName, CArray<size_t> &cAry)
+{
+	Node *pCurNode = nullptr;
+	pstStudentNameAndID pstStuNameAndId = nullptr;
+
+	if (!m_pHeadGuard || !m_pTailGuard)
+	{
+		return(false);
+	}
+	pCurNode = m_pHeadGuard->m_next;
+	while (pCurNode != m_pTailGuard)
+	{
+		pstStuNameAndId = (pstStudentNameAndID)&pCurNode->m_val;
+		if (!strcmp(pcszName, pstStuNameAndId->strStudentName.GetString()))
+		{
+			cAry.InsertHead(pstStuNameAndId->uiStudentID);
+		}
+		pCurNode = pCurNode->m_next;
+	}
+	// 如果数组内有内容则代表查找成功
+	if (cAry.GetSize())
+	{
+		return(true);
+	}
+
+	return(false);
+}
+
 
 template <typename T>
 bool CList<T>::DeleteCourseRecordFromStudentTreeCourseList(const char *pcszCourseName)
@@ -402,7 +721,6 @@ bool CList<T>::DeleteCourseRecordFromStudentTreeCourseList(CMyString &strCourseN
 	Node *pCurNode = nullptr;
 	Node *pPreNode = nullptr;
 	Node *pNextNode = nullptr;
-	StudentCourse stStuCo;
 	bool fOk = false;
 
 	// 找到课程名对应的链表结点
@@ -577,20 +895,26 @@ CList<T>& CList<T>::Insert(T val, size_t nIdx)
 
 
 template <typename T>
-void CList<T>::GetCourseListNamesAryStu(CArray<char *> &StuNameAry)
+void  CList<T>::GetStudentListNamesAry(size_t *&prStuID, size_t &nBufSize)
 {
 	Node *pCurNode = nullptr;
-	pstStuChosenCourse pStuChosenCo = nullptr;
+	pstStuChosenCourse pstStuChosenCo = nullptr;
 
 	if (!m_pHeadGuard || !m_pTailGuard)
 	{
 		return;
 	}
+	prStuID = new size_t[m_nSize];
+	if (!prStuID)
+	{
+		nBufSize = 0;
+		return;
+	}
 	pCurNode = m_pHeadGuard->m_next;
 	while (pCurNode != m_pTailGuard)
 	{
-		pStuChosenCo = (pstStuChosenCourse)&pCurNode->m_val;
-		StuNameAry.InsertHead(pStuChosenCo->strName.GetString());
+		pstStuChosenCo = &pCurNode->m_val;
+		prStuID[nBufSize++] = pstStuChosenCo->nStuID;
 		pCurNode = pCurNode->m_next;
 	}
 }
@@ -740,6 +1064,12 @@ template <typename T>
 bool CList<T>::IsEmpty() const
 {
 	return(!m_nSize);
+}
+
+template <typename T>
+size_t CList<T>::GetSize() const
+{ 
+	return(m_nSize); 
 }
 
 template <typename T>

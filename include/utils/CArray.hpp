@@ -1,27 +1,19 @@
+// 动态数组实现类
 #pragma once
-/*++
 
-Copyright (c) Ki0pler. All rights reserved.
+typedef struct StuIDName
+{
+	size_t nStuID;			// 学生ID
+	CMyString strName;		// 学生姓名
+} StuIDName, *pstStuIDName;
 
-You may only use this code if you agree to the terms of the GNU General Public License.
-If you do not agree to the terms, do not use the code.
-Any question about the code. Contact me with the email ki0pler@outlook.com
-
-
-Module Name:
-
-	CArray.hpp
-
-Abstract:
-
-   This module provides a template implementation of dynamic arrays.
-
---*/
 template <typename T>
 class CArray
 {
 #define BASESIZE 1000
 #define INCREMENT 500
+public:
+	
 public:
 	// 构造函数
 	CArray();
@@ -54,8 +46,6 @@ public:
 	size_t GetSize() const { return(m_nSize); } // 返回现有大小容量
 
 	int  Find(const T &val)const;				// 查找
-	bool FindStuByID(size_t nID) const;			// 通过ID查找学生信息
-	bool FindStuID(size_t nHash, size_t &rnID); // 通过Hash值查找学生ID
 
 	bool IsEmpty()const;                    // 判空
 	void Clear();                           // 清空
@@ -83,35 +73,6 @@ private:
 	size_t m_nBufSize = 0;					// 缓冲区大小  容量capacity
 };
 
-template <typename T>
-bool CArray<T>::FindStuByID(size_t nID) const
-{
-
-	return(true);
-}
-
-template <typename T>
-bool CArray<T>::FindStuID(size_t nHash, size_t &rnID)
-{
-	pstSearchIDByStudentName pSrhStuInfo = nullptr;
-	pstSearchIDByStudentName pObjInfo = nullptr;
-	bool fOk = false;
-
-	if (!nHash)
-	{
-		return(false);
-	}
-	pSrhStuInfo = m_pBuf;
-	// 二分查找法
-	pObjInfo = BinSrhStuName(pSrhStuInfo, m_nSize, nHash);
-	if (pObjInfo)
-	{
-		rnID = pObjInfo->uiStudentID;
-		fOk = true;
-	}
-
-	return(fOk);
-}
 
 template <typename T>
 bool CArray<T>::DeleteTail()

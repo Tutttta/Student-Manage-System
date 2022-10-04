@@ -16,31 +16,19 @@
     <Filter Include="utils">
       <UniqueIdentifier>{687a8fbb-7291-4ce4-afa7-6e52bf5186e3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="utils\source">
-      <UniqueIdentifier>{d9e093fe-dc97-42b2-a28f-4aec69d61f3a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="utils\header">
-      <UniqueIdentifier>{993df91d-3a64-444d-a896-5b8c1801da97}</UniqueIdentifier>
-    </Filter>
     <Filter Include="IO">
       <UniqueIdentifier>{e2ec4d19-f019-4b0d-97da-600d4a4596fa}</UniqueIdentifier>
     </Filter>
     <Filter Include="common">
       <UniqueIdentifier>{f6f77f6b-8b85-40b7-8746-7d6f66ce30d1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="common\header">
-      <UniqueIdentifier>{76aaa81a-bd65-469c-bada-bc460d04b818}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="common\source">
-      <UniqueIdentifier>{02feafb1-fa8f-4ff6-a80c-e3b2b36350b0}</UniqueIdentifier>
+    <Filter Include="Crypto">
+      <UniqueIdentifier>{b92ba308-7dd7-4dab-9fab-5efe51485c57}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\include\utils\CMyString.cpp">
-      <Filter>utils\source</Filter>
     </ClCompile>
     <ClCompile Include="Global.cpp">
       <Filter>源文件</Filter>
@@ -51,37 +39,25 @@
     <ClCompile Include="Control.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="IO.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="MockingString.cpp">
-      <Filter>common\source</Filter>
+      <Filter>common</Filter>
     </ClCompile>
     <ClCompile Include="MD5.cpp">
-      <Filter>common\source</Filter>
+      <Filter>Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\utils\CMyString.cpp">
+      <Filter>utils</Filter>
+    </ClCompile>
+    <ClCompile Include="IO.cpp">
+      <Filter>IO</Filter>
+    </ClCompile>
+    <ClCompile Include="Hash.cpp">
+      <Filter>Crypto</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\include\utils\CMyString.h">
-      <Filter>utils\header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\utils\CArray.hpp">
-      <Filter>utils\header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\utils\CStack.hpp">
-      <Filter>utils\header</Filter>
-    </ClInclude>
     <ClInclude Include="Global.h">
       <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\utils\CQueue.hpp">
-      <Filter>utils\header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\utils\CAVLTree.hpp">
-      <Filter>utils\header</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\utils\CList.hpp">
-      <Filter>utils\header</Filter>
     </ClInclude>
     <ClInclude Include="UI.h">
       <Filter>头文件</Filter>
@@ -89,14 +65,35 @@
     <ClInclude Include="Control.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\Crypto\MD5.h">
+      <Filter>Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\utils\MockingString.h">
+      <Filter>common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\utils\CArray.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\utils\CAVLTree.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\utils\CList.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\utils\CMyString.h">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\utils\CQueue.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\utils\CStack.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
     <ClInclude Include="IO.h">
-      <Filter>头文件</Filter>
+      <Filter>IO</Filter>
     </ClInclude>
-    <ClInclude Include="MockingString.h">
-      <Filter>common\header</Filter>
-    </ClInclude>
-    <ClInclude Include="MD5.h">
-      <Filter>common\header</Filter>
+    <ClInclude Include="..\include\Crypto\Hash.h">
+      <Filter>Crypto</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

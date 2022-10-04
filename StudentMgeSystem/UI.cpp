@@ -25,6 +25,11 @@ void UI::PrintMenu(const eMenuType &eType)
 			QuerySubMenu();
 			break;
 		}
+		case STATISTIC:
+		{
+			StatisticSubMenu();
+			break;
+		}
 	}
 
 	return;

@@ -1,27 +1,11 @@
 #pragma once
-/*++
-
-Copyright (c) Ki0pler. All rights reserved.
-
-You may only use this code if you agree to the terms of the GNU General Public License.
-If you do not agree to the terms, do not use the code.
-Any question about the code. Contact me with the email ki0pler@outlook.com
-
-
-Module Name:
-
-	CStack.hpp
-
-Abstract:
-
-   This module provides the basic implementation of the template stack
-
---*/
+// 链栈实现类
 
 template <typename T>
 class CStack
 {
 public:
+	// 栈结点的数据结构
 	typedef struct _STACKNODE
 	{
 		_STACKNODE() = default;
@@ -29,21 +13,18 @@ public:
 		T m_data;
 		struct _STACKNODE *m_pNext;
 	} STACKNODE, *PSTACKNODE;
-
 	// 无参构造函数
 	CStack();
 	// 含参构造函数
 	CStack(T data);
 	// 析构函数
 	~CStack();
-
 	// 将栈内元素逆置
 	void ReverseStack();
-
 	// 往栈内压入一个结点
 	bool Push(const STACKNODE &rcStackNode);
 	bool Push(T data);
-
+	// 从栈内弹出数据
 	bool Pop();
 	bool Pop(T &data);
 	bool Pop(STACKNODE &node);
@@ -51,28 +32,11 @@ public:
 	bool CreateStack(const PSTACKNODE pcStackNodeAry, size_t nArySize);
 	bool CreateStack(const T *pDataAry, size_t nArySize);
 	// 返回栈顶结点内容
-	T GetTop() const
-	{
-		if (!m_nStackSize || !m_pStackPtr)
-		{
-			return(GetValue(STACKNODE()));
-		}
-
-		return(GetValue(*m_pStackPtr));
-	}
-
+	T GetTop() const;
 	// 判定链栈是否为空
-	inline bool IsEmpty() const
-	{
-		return(!m_nStackSize || !m_pStackPtr->m_pNext);
-	}
-
+	inline bool IsEmpty() const { return(!m_nStackSize || !m_pStackPtr->m_pNext); }
 	// 获取当前元素数量
-	inline size_t GetSize() const
-	{
-		return(m_nStackSize);
-	}
-
+	inline size_t GetSize() const { return(m_nStackSize); }
 	// 清理链栈, 会保留头结点
 	void ClearStack();
 	// 打印链栈
@@ -91,6 +55,19 @@ private:
 	size_t		m_nStackSize;	// 栈的当前节点数(不包括头结点)
 	PSTACKNODE	m_pStackPtr;	// 栈顶指针
 };
+
+
+template <typename T>
+T CStack<T>::GetTop() const
+{
+	if (!m_nStackSize || !m_pStackPtr)
+	{
+		return(GetValue(STACKNODE()));
+	}
+
+	return(GetValue(*m_pStackPtr));
+}
+
 
 template <typename T>
 void CStack<T>::ReverseStack()
@@ -129,6 +106,7 @@ void CStack<T>::ReverseStack()
 	}
 }
 
+
 template <typename T>
 bool CStack<T>::Pop()
 {
@@ -151,6 +129,7 @@ bool CStack<T>::Pop()
 	return(true);
 }
 
+
 template <typename T>
 bool CStack<T>::Pop(STACKNODE &node)
 {
@@ -158,6 +137,7 @@ bool CStack<T>::Pop(STACKNODE &node)
 
 	return(Pop(node.m_data));
 }
+
 
 template <typename T>
 bool CStack<T>::Pop(T &data)
@@ -183,11 +163,13 @@ bool CStack<T>::Pop(T &data)
 	return(true);
 }
 
+
 template <typename T>
 void CStack<T>::ClearStack()
 {
 	ReleaseStackButHead();
 }
+
 
 template <typename T>
 void CStack<T>::ReleaseImpl(bool fKeepHead)
@@ -221,6 +203,7 @@ void CStack<T>::ReleaseImpl(bool fKeepHead)
 	return;
 }
 
+
 template <typename T>
 void CStack<T>::ReleaseStackButHead()
 {
@@ -233,6 +216,7 @@ void CStack<T>::ReleaseStack()
 {
 	ReleaseImpl();
 }
+
 
 template <typename T>
 void CStack<T>::PrintStack() const
@@ -254,6 +238,7 @@ void CStack<T>::PrintStack() const
 	cout << endl;
 }
 
+
 template <typename T>
 bool CStack<T>::Push(T data)
 {
@@ -261,6 +246,7 @@ bool CStack<T>::Push(T data)
 
 	return(Push(stNode));
 }
+
 
 template <typename T>
 bool CStack<T>::Push(const STACKNODE &rcStackNode)
@@ -297,6 +283,7 @@ bool CStack<T>::Push(const STACKNODE &rcStackNode)
 	return(true);
 }
 
+
 template <typename T>
 bool CStack<T>::CreateStack(const PSTACKNODE pcStackNodeAry, size_t nArySize)
 {
@@ -325,6 +312,7 @@ bool CStack<T>::CreateStack(const PSTACKNODE pcStackNodeAry, size_t nArySize)
 	return(true);
 }
 
+
 template <typename T>
 bool CStack<T>::CreateStack(const T *pDataAry, size_t nArySize)
 {
@@ -350,6 +338,7 @@ bool CStack<T>::CreateStack(const T *pDataAry, size_t nArySize)
 	return(fOk);
 }
 
+
 template <typename T>
 CStack<T>::~CStack()
 {
@@ -368,6 +357,7 @@ CStack<T>::CStack() :
 		m_pStackPtr->m_pNext = nullptr;
 	}
 }
+
 
 template <typename T>
 CStack<T>::CStack(T data) :

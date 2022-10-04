@@ -1,4 +1,5 @@
 #include "Control.h"
+#include "Hash.h"
 #include "MockingString.h"
 
 void Control::Run()
@@ -14,7 +15,7 @@ void Control::Run()
 		_getch();
 		return;
 	}
-	ClearScreenAndOutput("初始化成功, 按任意键使用");
+	
 	do 
 	{
 		m_UI.PrintMenu(MAIN);
@@ -24,21 +25,25 @@ void Control::Run()
 		{
 			case 1:
 			{
+				// 插入主功能函数
 				Insert();
 				break;
 			}
 			case 2:
 			{
+				// 删除主功能函数
 				Delete();
 				break;
 			}
 			case 3:
 			{
+				// 查询主功能函数
 				Query();
 				break;
 			}
 			case 4:
 			{
+				// 统计主功能函数
 				Statistic();
 				break;
 			}
@@ -63,26 +68,61 @@ BOOLEAN Control::InitSystem()
 {
 	char szStudentNameFilePath[LINEMAX] = { 0 };
 	char szCourseNameFilePath[LINEMAX] = { 0 };
+	char szSrhStudentNameFilePath[LINEMAX] = { 0 };
+	char szSrhCourseNameFilePath[LINEMAX] = { 0 };
 	PPSTR ppStudentsNameAry = nullptr;
 	PPSTR ppCoursesNameAry = nullptr;
 	size_t nLineOfStudentNames = 0;
 	size_t nLineOfCourseNames = 0;
+	BOOLEAN bUseUserData = FALSE;
 	BOOLEAN bInitSuccess = FALSE;
 
 	do
 	{
-		// 判定读取文件是否存在, 不存在直接返回
+		// 如果用户已经使用过了该系统则加载用户的数据
+		if (!ChkInitFileExists(szStudentNameFilePath, LINEMAX, SAVESTUDENTFILENAME) ||
+			!ChkInitFileExists(szCourseNameFilePath, LINEMAX, SAVECOURSEFILENAME) ||
+			!ChkInitFileExists(szSrhStudentNameFilePath, LINEMAX, SRHSTUDENTFILENAME) ||
+			!ChkInitFileExists(szSrhCourseNameFilePath, LINEMAX, SRHCOURSEFILENAME))
+		{
+			cout << "未找到用户的数据文件, 正在尝试加载默认数据" << endl;
+		}
+		else
+		{
+			cout << "尝试读取用户数据中" << endl;
+			// 加载用户的课程信息到二叉树
+			// 加载用户的学生信息到二叉树
+			if (!m_IO.LoadAVLTreeInfo(g_stCourseInfoTree, TRUE) ||
+				!m_IO.LoadSrhAVLTreeInfo(g_stSrhCourseNameTree, TRUE) ||
+				!m_IO.LoadAVLTreeInfo(g_stStudentInfoTree, FALSE) ||
+				!m_IO.LoadSrhAVLTreeInfo(g_stSrhStudentNameTree, TRUE))
+			{
+				cout << "用户读取数据读取失败, 正在尝试使用默认数据" << endl;
+			}
+			else
+			{
+				// 成功加载了用户的数据
+				cout << "加载用户数据, 初始化成功" << endl;
+				bUseUserData = TRUE;
+				bInitSuccess = TRUE;
+				break;
+			}
+		}
+		// 如果用户没有使用过该系统则寻找初始化配置文件加载, 没找到直接返回
 		if (!ChkInitFileExists(szStudentNameFilePath, LINEMAX, STUDENTFILENAME) ||
 			!ChkInitFileExists(szCourseNameFilePath, LINEMAX, COURSEFILENAME))
 		{
+			cout << "暂未找到用户默认数据, 当前管理系统内没有数据, 初始化成功" << endl;
+			bInitSuccess = TRUE;
 			break;
 		}
+		
 		// 从文件中读取所有学生姓名
 		m_IO.UpdateFileName(szStudentNameFilePath);
 		ppStudentsNameAry = m_IO.GetLineFromFile(nLineOfStudentNames);
 		if (!ppStudentsNameAry)
 		{
-			cout << "读取学生信息失败, 请再次尝试" << endl;
+			cout << "读取学生信息失败, 当前管理系统内没有数据, 初始化成功" << endl;
 			break;
 		}
 		// 从文件中读取所有课程名称
@@ -90,30 +130,62 @@ BOOLEAN Control::InitSystem()
 		ppCoursesNameAry = m_IO.GetLineFromFile(nLineOfCourseNames);
 		if (!ppCoursesNameAry)
 		{
-			cout << "读课程信息失败, 请在次尝试" << endl;
+			cout << "读课程信息失败, 当前管理系统内没有数据, 初始化成功" << endl;
 			break;
 		}
 		// 初始化学生信息
 		bInitSuccess = InitStudentInfo(ppStudentsNameAry, nLineOfStudentNames);
 		if (!bInitSuccess)
 		{
-			cout << "初始化学生信息失败, 请在次尝试" << endl;
+			cout << "初始化学生信息失败, 当前管理系统内没有数据, 初始化成功" << endl;
 			break;
 		}
 		// 初始化课程信息
 		bInitSuccess = InitCourseInfo(ppCoursesNameAry, nLineOfCourseNames);
 		if (!bInitSuccess)
 		{
-			cout << "初始化课程信息失败, 请在次尝试" << endl;
+			cout << "初始化课程信息失败, 当前管理系统内没有数据, 初始化成功" << endl;
 			break;
 		}
-
+		cout << "读取系统默认数据, 初始化成功" << endl;
 		bInitSuccess = TRUE;
 	} while (FALSE);
+
+	if (!bInitSuccess)
+	{
+		// 如果没有成功读取任何数据则释放所有AVL树
+		g_stCourseInfoTree.ReleaseTree();
+		g_stStudentInfoTree.ReleaseTree();
+		g_stSrhStudentNameTree.ReleaseTree();
+		g_stSrhCourseNameTree.ReleaseTree();
+	}
+	if (!bUseUserData)
+	{
+		cout << "正在生成用户数据, 请稍后" << endl;
+		// 保存默认的初始化数据
+		if (GenerateUserData())
+		{
+			cout << "成功生成用户数据" << endl;
+		}
+		else
+		{
+			cout << "生成用户数据失败" << endl;
+		}
+	}
+	
+	PAUSEANDCLS();
 	
 	return(bInitSuccess);
 }
 
+
+BOOLEAN Control::GenerateUserData()
+{
+	return(m_IO.RestoreAVLTreeInfo(g_stStudentInfoTree, FALSE) &&
+		m_IO.RestoreAVLTreeInfo(g_stCourseInfoTree, TRUE) &&
+		m_IO.RestoreSrhAVLTreeInfo(g_stSrhStudentNameTree, FALSE) &&
+		m_IO.RestoreSrhAVLTreeInfo(g_stSrhCourseNameTree, TRUE));
+}
 
 BOOLEAN Control::InitStudentInfo(PPSTR ppstrStudentNameAry, size_t nSize)
 {
@@ -153,7 +225,10 @@ BOOLEAN Control::InitStudentInfo(PPSTR ppstrStudentNameAry, size_t nSize)
 	return(fOk);
 }
 
-BOOLEAN Control::InitCourseInfo(PPSTR ppstrCourseNameAry, size_t nSize)
+
+BOOLEAN 
+Control::InitCourseInfo(PPSTR ppstrCourseNameAry, 
+	size_t nSize)
 {
 	BOOLEAN fOk = TRUE;
 
@@ -190,14 +265,10 @@ BOOLEAN Control::InitCourseInfo(PPSTR ppstrCourseNameAry, size_t nSize)
 }
 
 
-BOOLEAN Control::InitSystemData()
-{
-	
-	return(TRUE);
-}
-
-
-BOOLEAN Control::ChkInitFileExists(PSTR pszFilePathName, size_t nSize, PCSTR pcszFileName/* = STUDENTFILENAME*/)
+BOOLEAN 
+Control::ChkInitFileExists(PSTR pszFilePathName, 
+	size_t nSize, 
+	PCSTR pcszFileName/* = STUDENTFILENAME*/)
 {
 	char szFilePathName[LINEMAX] = "..\\data\\";
 	int iLen = 0;
@@ -218,7 +289,7 @@ BOOLEAN Control::ChkInitFileExists(PSTR pszFilePathName, size_t nSize, PCSTR pcs
 		if (!m_IO.FileExists(szFilePathName))
 		{
 			// 依旧不存在
-			printf("无法找到%s, 请将其放于与本程序同一目录下并再次尝试", pcszFileName);
+			printf("无法找到%s, 请将其放于与本程序同一目录下并再次尝试\r\n", pcszFileName);
 			return(FALSE);
 		}
 	}
@@ -230,31 +301,10 @@ BOOLEAN Control::ChkInitFileExists(PSTR pszFilePathName, size_t nSize, PCSTR pcs
 	return(TRUE);
 }
 
-size_t Control::NameHashCalc(PCSTR pcszName, size_t nSize)
-{
-	size_t nHash = 0;
-	MD5_CTX Md5;
-	unsigned char szMd5[32] = { 0 };
 
-	if (!pcszName || !nSize)
-	{
-		return(0);
-	}
-	MD5Init(&Md5);
-	// 计算md5值
-	MD5Update(&Md5, (unsigned char *)pcszName, nSize);
-	MD5Final(&Md5, (unsigned char *)szMd5);
-
-	// 计算md5算出来的Hash值
-	for (size_t nIdx = 0; nIdx < 16; ++nIdx)
-	{
-		nHash += szMd5[nIdx];
-	}
-
-	return(nHash);
-}
-
-BOOLEAN Control::SetSearchIDByStudentNameStructure(PSTR pStrName, size_t nID)
+BOOLEAN 
+Control::SetSearchIDByStudentNameStructure(PSTR pStrName, 
+	size_t nID)
 {
 	size_t nHash = 0;
 	BOOLEAN fOk = FALSE;
@@ -291,7 +341,10 @@ BOOLEAN Control::SetSearchIDByStudentNameStructure(PSTR pStrName, size_t nID)
 	return(fOk);
 }
 
-BOOLEAN Control::SetSearchIDByCourseNameStructure(PSTR pStrName, size_t nID)
+
+BOOLEAN 
+Control::SetSearchIDByCourseNameStructure(PSTR pStrName, 
+	size_t nID)
 {
 	size_t nHash = 0;
 	BOOLEAN fOk = FALSE;
@@ -324,12 +377,14 @@ BOOLEAN Control::SetSearchIDByCourseNameStructure(PSTR pStrName, size_t nID)
 		// ID发生了重复则找到那个结点直接挂再链表上
 		pTreeNode->m_data.lstCourseName.InsertTail(stCoNameId);
 	}
-
+	
 	return(fOk);
 }
 
 
-void Control::ClearScreenAndOutput(PCSTR pszText, BOOLEAN fNextLine /*= TRUE*/)
+void 
+Control::ClearScreenAndOutput(PCSTR pszText, 
+	BOOLEAN fNextLine /*= TRUE*/)
 {
 	system("cls");
 	if (pszText)
@@ -391,6 +446,7 @@ void Control::Insert()
 	return;
 }
 
+
 void Control::Delete()
 {
 	int iCmd = 0;
@@ -438,6 +494,7 @@ void Control::Delete()
 	return;
 }
 
+
 void Control::Query()
 {
 	int iCmd = 0;
@@ -453,31 +510,37 @@ void Control::Query()
 		{
 			case 1:
 			{
+				// 通过学生ID查询学生名称
 				QueryStuNameByID();
 				break;
 			}
 			case 2:
 			{
+				// 通过学生名称查询学生ID
 				QueryIDByStuName();
 				break;
 			}
 			case 3:
 			{
+				// 通过课程ID查询课程名
 				QueryCoNameByID();
 				break;
 			}
 			case 4:
 			{
+				// 通过课程名查询课程ID
 				QueryIDByCoName();
 				break;
 			}
 			case 5:
 			{
+				// 通过课程ID查询选修该课程的所有学生的成绩和分数
 				QueryAllStuAndPointsByID();
 				break;
 			}
 			case 6:
 			{
+				// 通过学生ID查询其选修的所有课程的信息
 				QueryCoInfoByID();
 				break;
 			}
@@ -492,10 +555,48 @@ void Control::Query()
 	return;
 }
 
+
 void Control::Statistic()
 {
-	ClearScreenAndOutput("统计功能");
+	int iCmd = 0;
+	BOOLEAN fOk = TRUE;
+
+	system("cls");
+	do
+	{
+		m_UI.PrintMenu(STATISTIC);
+		scanf("%d", &iCmd);
+		ClearBuffer();
+		switch (iCmd)
+		{
+			case 1:
+			{
+				// 打印所有课程信息
+				PrintAllCourseInfo();
+				break;
+			}
+			case 2:
+			{
+				// 打印所有学生信息
+				PrintAllStudentInfo();
+				break;
+			}
+			case 3:
+			{
+				system("cls");
+				break;
+			}
+			default:
+			{
+				ClearScreenAndOutput("请输入1-3之间的命令");
+				break;
+			}
+		}
+	} while (iCmd != 3);
+
+	return;
 }
+
 
 void Control::AddStudent()
 {
@@ -556,6 +657,15 @@ void Control::AddStudent()
 				stInfo.strName = pszNameBuf;
 				// 把结点插入二叉树
 				fOk = g_stStudentInfoTree.InsertNode(stInfo, uiID);
+				if (fOk)
+				{
+					// 更新文件内容
+					if (!m_IO.RestoreAVLTreeInfo(g_stStudentInfoTree, FALSE) ||
+						!m_IO.RestoreSrhAVLTreeInfo(g_stSrhStudentNameTree, FALSE))
+					{
+						cout << "存储到文件失败, 该添加操作只有本次有效" << endl;
+					}
+				}
 			}
 		}
 		if (fOk)
@@ -576,18 +686,20 @@ void Control::AddStudent()
 	return;
 }
 
+
 void Control::AddCourse()
 {
 	UINT uiID = 0;
+	size_t nLen = 0;
 	CMyString strCoName;
 	BOOLEAN fFind = FALSE;
 	BOOLEAN fOk = FALSE;
 	stCourse stInfo = { 0 };
 	stSearchIDByCourseName stSrhCoInfo = { 0 };
-	char *pszNameBuf = nullptr;
-	char *pszNameBufx = nullptr;
+	PSTR pszNameBuf = nullptr;
+	PSTR pszNameBufx = nullptr;
 	char szNameBufTmp[LINEMAX] = { 0 };
-	size_t nLen = 0;
+	
 
 	do
 	{
@@ -634,6 +746,15 @@ void Control::AddCourse()
 			stInfo.strCourseName = pszNameBuf;
 			// 把结点插入二叉树
 			fOk = g_stCourseInfoTree.InsertNode(stInfo, uiID);
+			if (fOk)
+			{
+				// 更新文件内容
+				if (!m_IO.RestoreAVLTreeInfo(g_stCourseInfoTree) ||
+					!m_IO.RestoreSrhAVLTreeInfo(g_stSrhCourseNameTree))
+				{
+					cout << "存储到文件失败, 该添加操作只有本次有效" << endl;
+				}
+			}
 		}
 		if (fOk)
 		{
@@ -652,6 +773,7 @@ void Control::AddCourse()
 
 	return;
 }
+
 
 void Control::AddRecord()
 {
@@ -697,14 +819,17 @@ void Control::AddRecord()
 		// 没选课过这门课则添加记录
 		StudentCourse stStuCourse;
 		UINT uiPoint = 0;
-		cout << "请输入课程成绩(0-100): ";
-		scanf("%u", &uiPoint);
-		ClearBuffer();
+		do
+		{
+			cout << "请输入课程成绩(0-100): ";
+			scanf("%u", &uiPoint);
+			ClearBuffer();
+		} while (uiPoint > 100);
 		// 填充课程信息, 并将选课插入
 		stStuCourse.uiPoint = uiPoint;
+		stStuCourse.nCourseID = pstCourseInfo->uiCourseID;
 		stStuCourse.strCourseName = pstCourseInfo->strCourseName;
 		pstStudentInfo->lstOfCourse.InsertTail(stStuCourse);
-
 		// 在课程树上添加选择了该课程的学生
 		pstCourse pstCo = g_stCourseInfoTree.FindNodeDataPtrByID(uiCourseID);
 		if (!pstCo)
@@ -718,6 +843,13 @@ void Control::AddRecord()
 		stChnCo.uiPoint = uiPoint;
 		stChnCo.nStuID = pstStudentInfo->uiID;
 		pstCo->lstOfStu.InsertTail(stChnCo);
+
+		if (!m_IO.RestoreAVLTreeInfo(g_stStudentInfoTree, FALSE) ||
+			!m_IO.RestoreAVLTreeInfo(g_stCourseInfoTree))
+		{
+			cout << "存储到文件失败, 该添加操作只有本次有效" << endl;
+		}
+
 		ClearScreenAndOutput("添加课程成功!");
 	}
 	else
@@ -725,7 +857,10 @@ void Control::AddRecord()
 		// 已经选过这门课了提示无法再次选择
 		ClearScreenAndOutput("已经选过这门课了,无法再次选择");
 	}
+
+	return;
 }
+
 
 void Control::DelStudent()
 {
@@ -747,7 +882,7 @@ void Control::DelStudent()
 		// 计算名字的hash值
 		nHash = NameHashCalc(pstrStuName, stInfo.strName.GetBufLen() - 1);
 		// 通过hash找到g_stSrhStudentNameTree上的结点并删除
-		fOk = g_stSrhStudentNameTree.DeleteNode(nHash);
+		fOk = g_stSrhStudentNameTree.DeleteNode(nHash, uiID, FALSE);
 		if (fOk)
 		{
 			CArray<char *> CourseNameAry;
@@ -765,6 +900,15 @@ void Control::DelStudent()
 					fOk = g_stCourseInfoTree.DeleteStuChosenCourseFromCourseInfoTree(
 						CourseNameAry[nCourseIdx], nHash, pstrStuName);
 				}
+				if (fOk)
+				{
+					if (!m_IO.RestoreSrhAVLTreeInfo(g_stSrhStudentNameTree, FALSE) ||
+						!m_IO.RestoreAVLTreeInfo(g_stCourseInfoTree, TRUE) ||
+						!m_IO.RestoreAVLTreeInfo(g_stStudentInfoTree, FALSE))
+					{
+						cout << "存储到文件失败, 该删除操作只有本次有效" << endl;
+					}
+				}
 			}
 		}
 	}
@@ -779,6 +923,7 @@ void Control::DelStudent()
 
 	return;
 }
+
 
 void Control::DelCourse()
 {
@@ -800,23 +945,32 @@ void Control::DelCourse()
 		// 计算名字的hash值
 		nHash = NameHashCalc(pstrCoName, stInfo.strCourseName.GetBufLen() - 1);
 		// 通过hash找到g_stSrhCourseNameTree上的结点并删除
-		fOk = g_stSrhCourseNameTree.DeleteNode(nHash);
+		fOk = g_stSrhCourseNameTree.DeleteNode(nHash, uiID, TRUE);
 		if (fOk)
 		{
-			CArray<char *> StudentNameAry;
+			size_t *pStudentIDAry = nullptr;
+			size_t nBufSize = 0;
 			// 删除课程AVL树上的结点
-			fOk = g_stCourseInfoTree.DeleteNodeCo(uiID, StudentNameAry);
+			fOk = g_stCourseInfoTree.DeleteNodeCo(uiID, pStudentIDAry, nBufSize);
 			if (fOk)
 			{
 				BOOLEAN fFind = FALSE;
 				size_t nHash = 0;
 				// 在学生AVL树的课程链表上的结点删除
-				for (size_t nStuIdx = 0; nStuIdx < StudentNameAry.GetSize(); ++nStuIdx)
+				for (size_t nStuIdx = 0; nStuIdx < nBufSize; ++nStuIdx)
 				{
-					nHash = NameHashCalc(StudentNameAry[nStuIdx], strlen(StudentNameAry[nStuIdx]));
 					// 通过课程名, 删除g_stCourseInfoTree上的学生选课链表结点
 					fOk = g_stStudentInfoTree.DeleteCoursePointRecFromStudentInfoTree(
-						StudentNameAry[nStuIdx], nHash, pstrCoName);
+						pStudentIDAry[nStuIdx], pstrCoName);
+				}
+				if (fOk)
+				{
+					if (!m_IO.RestoreSrhAVLTreeInfo(g_stSrhCourseNameTree, TRUE) ||
+						!m_IO.RestoreAVLTreeInfo(g_stCourseInfoTree, TRUE) ||
+						!m_IO.RestoreAVLTreeInfo(g_stStudentInfoTree, FALSE))
+					{
+						cout << "存储到文件失败, 该删除操作只有本次有效" << endl;
+					}
 				}
 			}
 		}
@@ -884,9 +1038,20 @@ void Control::DelRecord()
 			ClearScreenAndOutput("成功删除选课记录");
 			return;
 		}
+		if (fOk)
+		{
+			if (!m_IO.RestoreAVLTreeInfo(g_stCourseInfoTree, TRUE) ||
+				!m_IO.RestoreAVLTreeInfo(g_stStudentInfoTree, FALSE))
+			{
+				cout << "存储到文件失败, 该删除操作只有本次有效" << endl;
+			}
+		}
 	}
 	ClearScreenAndOutput("错误, 没有该选课记录");
+
+	return;
 }
+
 
 void Control::QueryStuNameByID()
 {
@@ -909,7 +1074,10 @@ void Control::QueryStuNameByID()
 		sprintf(szBuf, "学生信息: \r\nID: %u\r\n姓名: %s\r\n", uiID, stInfo.strName);
 		ClearScreenAndOutput(szBuf, FALSE);
 	}
+
+	return;
 }
+
 
 void Control::QueryIDByStuName()
 {
@@ -954,9 +1122,11 @@ void Control::QueryIDByStuName()
 			return;
 		}
 	}
-
 	ClearScreenAndOutput("未查到该学生信息, 请确认学生姓名是否有误");
+
+	return;
 }
+
 
 void Control::QueryCoNameByID()
 {
@@ -979,7 +1149,10 @@ void Control::QueryCoNameByID()
 		sprintf(szBuf, "课程信息: \r\nID: %u\r\n课程名: %s\r\n", stInfo.uiCourseID, stInfo.strCourseName);
 		ClearScreenAndOutput(szBuf, FALSE);
 	}
+
+	return;
 }
+
 
 void Control::QueryIDByCoName()
 {
@@ -1018,9 +1191,11 @@ void Control::QueryIDByCoName()
 			return;
 		}
 	}
-
 	ClearScreenAndOutput("未查到该课程信息, 请确认课程名是否有误");
+
+	return;
 }
+
 
 void Control::QueryAllStuAndPointsByID()
 {
@@ -1046,7 +1221,10 @@ void Control::QueryAllStuAndPointsByID()
 		stInfo.lstOfStu.TraverseList();
 		PAUSEANDCLS();
 	}
+
+	return;
 }
+
 
 void Control::QueryCoInfoByID()
 {
@@ -1071,4 +1249,20 @@ void Control::QueryCoInfoByID()
 		stInfo.lstOfCourse.TraverseList();
 		PAUSEANDCLS();
 	}
+
+	return;
+}
+
+
+void Control::PrintAllCourseInfo()
+{
+	g_stCourseInfoTree.LevelOrderTraverseCourseInfo();
+	PAUSEANDCLS();
+}
+
+
+void Control::PrintAllStudentInfo()
+{
+	g_stStudentInfoTree.LevelOrderTraverseStudentInfo();
+	PAUSEANDCLS();
 }

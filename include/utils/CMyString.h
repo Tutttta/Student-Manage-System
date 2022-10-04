@@ -1,23 +1,5 @@
 #pragma once
-/*++
-
-Copyright (c) Ki0pler. All rights reserved.
-
-You may only use this code if you agree to the terms of the GNU General Public License.
-If you do not agree to the terms, do not use the code.
-Any question about the code. Contact me with the email ki0pler@outlook.com
-
-
-Module Name:
-
-	CMyString.h
-	CMyString.cpp
-
-Abstract:
-
-   This module provides a simple String implementation.
-
---*/
+// 动态字符串实现类
 #include <iostream>
 
 using namespace std;

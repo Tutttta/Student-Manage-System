@@ -7,6 +7,7 @@ class UI
 {
 public:
 	UI() {} 
+	// 开放的接口, 其通过一个枚举值确定打印的菜单
 	void PrintMenu(const eMenuType &eType);
 private:
 	// 主功能菜单

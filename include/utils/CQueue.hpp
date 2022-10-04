@@ -1,22 +1,5 @@
 #pragma once
-/*++
-
-Copyright (c) Ki0pler. All rights reserved.
-
-You may only use this code if you agree to the terms of the GNU General Public License.
-If you do not agree to the terms, do not use the code.
-Any question about the code. Contact me with the email ki0pler@outlook.com
-
-
-Module Name:
-
-	CQueue.hpp
-
-Abstract:
-
-   This module provides the basic implementation of the template bidirectional circular queue
-
---*/
+// 双向循环队列实现类
 
 template <typename T>
 class CQueue
@@ -66,6 +49,7 @@ public:
 
 		return(true);
 	}
+	// 获取尾指针所指向的结点的值
 	bool GetTailValue(T &data) const
 	{
 		if (!m_pTailNode)

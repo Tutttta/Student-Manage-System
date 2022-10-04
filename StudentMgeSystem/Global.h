@@ -14,11 +14,12 @@
 #include "CQueue.hpp"
 #include "CAVLTree.hpp"
 
+// 常用类型关键字宏定义
 #define UINT unsigned int 
 #define ULONGLONG unsigned long long 
 #define LONGLONG long long 
-#define INT int
 #define BOOLEAN bool
+#define INT int
 #define FALSE false 
 #define TRUE true
 #define PSTR char *
@@ -28,9 +29,20 @@
 // 一行最大的字符数
 #define LINEMAX 256
 
+// 课程数据文件名
 #define COURSEFILENAME "courses.txt"
+// 学生姓名数据文件名
 #define STUDENTFILENAME "names.txt"
+// g_stSrhCourseNameTree保存的文件名
+#define SRHCOURSEFILENAME "srhcourse.dat"
+// g_stSrhStudentNameTree保存的文件名
+#define SRHSTUDENTFILENAME "srhstudent.dat"
+// g_stStudentInfoTree保存的文件名
+#define SAVESTUDENTFILENAME "student.dat"
+// g_stCourseInfoTree保存的文件名
+#define SAVECOURSEFILENAME "course.dat"
 
+// 暂停和清屏用的函数宏
 #define PAUSEANDCLS() system("pause"); \
 						system("cls");
 #define CLSANDPAUSE() system("cls"); \
@@ -48,12 +60,16 @@ typedef enum _eMenuType
 	DELETE		// 删除子菜单
 } eMenuType;
 
+
+// 学生信息中用于记录其选修课程的结构体
 typedef struct tagStudentCourse
 {
 	friend ostream &operator<<(ostream &os, const tagStudentCourse &stInfo);
-	CMyString strCourseName;	// 课程名字
+	size_t nCourseID;			// 课程ID
 	UINT uiPoint;				// 课程对应的分数
+	CMyString strCourseName;	// 课程名字
 } StudentCourse, *pStudentCourse;
+
 
 // 一棵BST树存储 ID作为结点值, 存储tagStudentInfo结构体
 // 学生ID => 学生姓名 √
@@ -72,9 +88,11 @@ typedef struct tagStudentInfo
 typedef struct _stStudentNameAndID
 {
 	friend ostream &operator<<(ostream &os, const _stStudentNameAndID &stInfo);
-	CMyString strStudentName;			// 学生名
 	UINT uiStudentID;					// 学生ID
+	CMyString strStudentName;			// 学生名
 } stStudentNameAndID, *pstStudentNameAndID;
+
+
 // 由于学生名的HASH值可能重复, 所以把重复的用一个链表串起来
 typedef struct tagSearchIDByStudentName
 {
@@ -91,10 +109,13 @@ typedef struct tagSearchIDByStudentName
 typedef struct tagStuChosenCourse
 {
 	friend ostream &operator<<(ostream &os, const tagStuChosenCourse &stInfo);
-	CMyString strName;		// 学生姓名
 	size_t nStuID;			// 学生ID
 	UINT uiPoint;			// 学生的成绩
+	CMyString strName;		// 学生姓名
 } StuChosenCourse, *pstStuChosenCourse;
+
+
+// 课程信息结构体, 其会被插入到AVL搜索树中
 typedef struct tagCourse
 {
 	friend ostream &operator<<(ostream &os, const tagCourse &stInfo);
@@ -110,6 +131,8 @@ typedef struct _stCourseNameAndID
 	CMyString strCourseName;			// 课程名
 	UINT uiCourseID;					// 课程ID
 } stCourseNameAndID, *pstCourseNameAndID;
+
+
 // 由于课程名的HASH值可能重复, 所以把重复的用一个链表串起来
 typedef struct tagSearchIDByCourseName
 {
@@ -128,4 +151,5 @@ extern CAVLTree<stSearchIDByCourseName> g_stSrhCourseNameTree;
 
 // 学生信息的平衡二叉搜索树, 管理通过学生名查询ID等信息
 extern CAVLTree<stSearchIDByStudentName> g_stSrhStudentNameTree;
+
 #endif 

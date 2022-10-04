@@ -84,7 +84,7 @@
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>..\include\;..\include\utils\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include\;..\include\utils\;..\include\Crypto\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -108,7 +108,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>..\include\;..\include\utils\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\include\;..\include\utils\;..\include\Crypto\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -135,6 +135,7 @@
     <ClCompile Include="..\include\utils\CMyString.cpp" />
     <ClCompile Include="Control.cpp" />
     <ClCompile Include="Global.cpp" />
+    <ClCompile Include="Hash.cpp" />
     <ClCompile Include="IO.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MD5.cpp" />
@@ -142,17 +143,18 @@
     <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\Crypto\Hash.h" />
+    <ClInclude Include="..\include\Crypto\MD5.h" />
     <ClInclude Include="..\include\utils\CArray.hpp" />
     <ClInclude Include="..\include\utils\CAVLTree.hpp" />
     <ClInclude Include="..\include\utils\CList.hpp" />
     <ClInclude Include="..\include\utils\CMyString.h" />
     <ClInclude Include="..\include\utils\CQueue.hpp" />
     <ClInclude Include="..\include\utils\CStack.hpp" />
+    <ClInclude Include="..\include\utils\MockingString.h" />
     <ClInclude Include="Control.h" />
     <ClInclude Include="Global.h" />
     <ClInclude Include="IO.h" />
-    <ClInclude Include="MD5.h" />
-    <ClInclude Include="MockingString.h" />
     <ClInclude Include="UI.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
