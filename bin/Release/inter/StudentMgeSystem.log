@@ -1,13 +1,14 @@
 ﻿  CMyString.cpp
   Control.cpp
   Global.cpp
+  Hash.cpp
   IO.cpp
   main.cpp
   MD5.cpp
   MockingString.cpp
   UI.cpp
   正在生成代码
-  All 323 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  All 364 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   已完成代码的生成
   StudentMgeSystem.vcxproj -> D:\科锐笔记\DATAST09\StudentMgeSystem\StudentMgeSystem\..\bin\Release\学生管理系统.exe
   StudentMgeSystem.vcxproj -> ..\bin\Release\学生管理系统.pdb (Full PDB)
